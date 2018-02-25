@@ -4,10 +4,25 @@ use std::io::{self, Write};
 
 use escape::*;
 
+use std::error::Error;
+use std::fmt;
+
 #[derive(Debug)]
 pub enum WriteError<DE> {
     DirectiveError(DE),
     IO(io::Error),
+}
+
+impl<DE> fmt::Display for WriteError<DE> where DE: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f,"{}","error")
+    }
+}
+
+impl<DE> Error for WriteError<DE> where DE: fmt::Debug {
+    fn description(&self) -> &str {
+        "error"
+    }
 }
 
 impl<DE> From<io::Error> for WriteError<DE> {
@@ -15,7 +30,6 @@ impl<DE> From<io::Error> for WriteError<DE> {
         WriteError::IO(err)
     }
 }
-
 
 pub trait DirectiveHandler {
     type DirectiveError;
