@@ -1,4 +1,3 @@
-
 use {Node, TemplateContext};
 use std::io::{self, Write};
 
@@ -6,6 +5,8 @@ use escape::*;
 
 use std::error::Error;
 use std::fmt;
+
+use error::*;
 
 #[derive(Debug)]
 pub enum WriteError<DE> {

@@ -4,7 +4,7 @@ extern crate nom;
 pub mod parse;
 pub mod escape;
 pub mod output;
-
+pub mod error;
 
 #[derive(Debug, Clone)]
 pub struct Element {
@@ -65,7 +65,6 @@ pub fn element(name:&str, attributes: Vec<(&str, &str)>) -> Element {
 pub fn contains<T, F>(opt: Option<T>, f: F) -> bool where F: Fn(&T) -> bool {
     opt.iter().any(f)
 }
-
 
 #[derive(Debug)]
 pub struct TemplateContext {
