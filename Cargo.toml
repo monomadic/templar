@@ -1,7 +1,8 @@
 [package]
 name = "templar"
 version = "0.1.1"
-authors = ["Michael Shaw <michaeljshaw@gmail.com>", "Rob Saunders <rob@wearebrandnew.com>"]
+authors = ["Rob Saunders <rob@wearebrandnew.com>", "Michael Shaw <michaeljshaw@gmail.com>"]
+edition = "2018"
 
 [dependencies.nom]
 version = "3.2"

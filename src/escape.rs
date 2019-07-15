@@ -1,7 +1,6 @@
-
 use std::string::FromUtf8Error;
 
-pub fn escape_html(raw_str:&str) -> Result<String, FromUtf8Error> {
+pub fn escape_html(raw_str: &str) -> Result<String, FromUtf8Error> {
     let mut allocated = Vec::with_capacity(raw_str.len() * 2); // this is allocation free
     for c in raw_str.as_bytes() {
         match *c {
@@ -15,7 +14,7 @@ pub fn escape_html(raw_str:&str) -> Result<String, FromUtf8Error> {
                     b'/' => allocated.extend_from_slice(b"&#x2F;"),
                     // Old versions of IE treat a ` as a '.
                     b'`' => allocated.extend_from_slice(b"&#96;"),
-                    _ => unreachable!()
+                    _ => unreachable!(),
                 }
             }
             _ => allocated.push(*c),
@@ -25,8 +24,8 @@ pub fn escape_html(raw_str:&str) -> Result<String, FromUtf8Error> {
     String::from_utf8(allocated)
 }
 
-pub fn escape_default(raw_str:&str) -> String {
-    let mut out : Vec<char> = Vec::new();
+pub fn escape_default(raw_str: &str) -> String {
+    let mut out: Vec<char> = Vec::new();
     for c in raw_str.chars() {
         for ec in c.escape_default() {
             out.push(ec);
@@ -34,5 +33,4 @@ pub fn escape_default(raw_str:&str) -> String {
     }
 
     out.into_iter().collect()
-
 }

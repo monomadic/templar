@@ -1,7 +1,7 @@
 use std::io;
 
 #[derive(Debug)]
-enum TemplarError {
+pub enum TemplarError {
     IoError(io::Error),
     ParseError,
 }
@@ -24,11 +24,4 @@ impl error::Error for TemplarError {
             TemplarError::ParseError => "parse error",
         }
     }
-
-    // fn cause(&self) -> Option<&error::Error> {
-    //     match *self {
-    //         TemplarError::IoError(ref e) => Some(e),
-    //         TemplarError::ParseError => None,
-    //     }
-    // }
 }

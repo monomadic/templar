@@ -1,8 +1,7 @@
 use nom::*; // {digit, space, alphanumeric}
 use std::str;
 use std::cmp::max;
-
-use contains;
+use crate::contains;
 
 fn always<T>(_:T) -> bool {
     true

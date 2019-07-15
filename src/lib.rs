@@ -1,10 +1,7 @@
-#[macro_use]
-extern crate nom;
-
-pub mod parse;
+pub mod error;
 pub mod escape;
 pub mod output;
-pub mod error;
+pub mod parse;
 
 #[derive(Debug, Clone)]
 pub struct Element {
@@ -16,7 +13,10 @@ pub struct Element {
 #[derive(Debug, Clone)]
 pub enum Node {
     Doctype(String),
-    Directive { command: String, children: Vec<Node> },
+    Directive {
+        command: String,
+        children: Vec<Node>,
+    },
     Text(String),
     RawText(String), // for javascript
     Element(Element),
@@ -37,44 +37,50 @@ impl Node {
         }
     }
 
-    pub fn append_child(&mut self, node:Node) -> bool {
+    pub fn append_child(&mut self, node: Node) -> bool {
         match self {
             &mut Node::Doctype(_) => false,
-            &mut Node::Directive { ref mut children, .. } => {
+            &mut Node::Directive {
+                ref mut children, ..
+            } => {
                 children.push(node);
                 true
-            },
+            }
             &mut Node::Text(_) => false,
             &mut Node::RawText(_) => false, // for javascript
             &mut Node::Element(ref mut ele) => {
                 ele.children.push(node);
                 true
-            },
+            }
         }
     }
 }
 
-pub fn element(name:&str, attributes: Vec<(&str, &str)>) -> Element {
+pub fn element(name: &str, attributes: Vec<(&str, &str)>) -> Element {
     Element {
         name: name.into(),
-        attributes: attributes.iter().map(|&(k, v)| (k.into(), v.into())).collect(),
+        attributes: attributes
+            .iter()
+            .map(|&(k, v)| (k.into(), v.into()))
+            .collect(),
         children: Vec::new(),
     }
 }
 
-pub fn contains<T, F>(opt: Option<T>, f: F) -> bool where F: Fn(&T) -> bool {
+pub fn contains<T, F>(opt: Option<T>, f: F) -> bool
+where
+    F: Fn(&T) -> bool,
+{
     opt.iter().any(f)
 }
 
 #[derive(Debug)]
 pub struct TemplateContext {
-    pub nodes:Vec<Node>,
+    pub nodes: Vec<Node>,
 }
 
 impl TemplateContext {
     pub fn empty() -> TemplateContext {
-        TemplateContext {
-            nodes: Vec::new()
-        }
+        TemplateContext { nodes: Vec::new() }
     }
 }
