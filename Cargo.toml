@@ -5,5 +5,5 @@ authors = ["Rob Saunders <rob@wearebrandnew.com>", "Michael Shaw <michaeljshaw@g
 edition = "2018"
 
 [dependencies.nom]
-version = "3.2"
-features = ["std", "stream", "verbose-errors"]
+version = "5.1.1"
+features = ["std"]

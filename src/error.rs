@@ -6,22 +6,10 @@ pub enum TemplarError {
     ParseError,
 }
 
-use std::fmt;
-impl fmt::Display for TemplarError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            TemplarError::IoError(ref e) => write!(f, "IO error: {}", e),
-            TemplarError::ParseError => write!(f, "Parse error"),
-        }
-    }
-}
-
-use std::error;
-impl error::Error for TemplarError {
-    fn description(&self) -> &str {
-        match *self {
-            TemplarError::IoError(ref e) => e.description(),
-            TemplarError::ParseError => "parse error",
-        }
-    }
+#[derive(Debug)]
+pub struct ParseError {
+    pub line_number: usize,
+    pub context: Vec<String>, // last few lines
+    pub character: Option<u64>,
+    pub message: String,
 }
