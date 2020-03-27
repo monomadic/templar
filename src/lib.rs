@@ -10,12 +10,12 @@ pub type ParseResult<T> = Result<T, Box<dyn std::error::Error>>;
 #[derive(Debug, Clone)]
 pub struct Block {
     ident: String,
-    properties: Vec<Parameter>,
+    properties: Vec<Property>,
     nodes: Vec<Node>,
 }
 
 #[derive(Debug, Clone)]
-pub enum Parameter {
+pub enum Property {
     Symbol(String),
     QuotedString(String),
 }

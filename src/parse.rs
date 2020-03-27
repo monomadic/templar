@@ -31,66 +31,32 @@ pub fn parse(content:&str) -> ParseResult<Vec<Block>> {
     Ok(blocks)
 }
 
-// use nom::character::complete::digit1;
-// use nom::combinator::map;
-
-// let parse_bh = map(alphanumeric0, |s: &str| s.len());
-
-// let split_by_space = opt()
-
-// let block_header_ident = alphanumeric0;
-
 fn parse_block_header(input: &str) -> IResult<&str, Block> {
     let space = nom::bytes::complete::take_while1(|c| c == ' ');
-
-    // println!("split: {:?}", nom::multi::separated_list(char(' '), alphanumeric0)(input));
-
-    println!("INPUT: {}", input);
-    let (properties, ident) = alphanumeric0(input)?;
-
     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
-    
-    let params = nom::multi::many0(block_parameter);
-    // nom::multi::separated_list(char(' '), alphanumeric0)
-    // let params = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
+    let params = nom::multi::many0(block_property);
 
-
-    let (input, (ident, _, parameters)) =
+    let (input, (ident, _, properties)) =
         nom::sequence::tuple((method, space, params))(input)?;
-
-
-    println!("(ident, parameters): {:?}", (ident, parameters));
 
     Ok(("", Block {
         ident: String::from(ident),
-        properties: Vec::new(),
+        properties,
         nodes: Vec::new(),
     }))
 }
 
-// fn trim_whitespace(i: &str) -> IResult<&str, String> {
-// }
-
 // return custom enum later
-fn block_parameter(i: &str) -> IResult<&str, String> {
-
-
-    // let (_, i) = take_while!(one_of!(" \t"))(i)?;
-    // let (a, b) = nom::bytes::complete::take_while(|c| c == ' ')(i)?;
-    // let (a, b) = take_while(nom::character::is_space)(i)?;
-    // println!("-- {:?}", (a,b));
-    // preceded!(opt!(consume_useless_chars),
-    // opt(preceded(tag(" "), symbol))
+fn block_property(i: &str) -> IResult<&str, Property> {
     alt((
         // map(hash, JsonValue::Object),
         // map(array, JsonValue::Array),
-        map(quoted_string, |s| String::from(s)),
+        map(quoted_string, |s| Property::QuotedString(String::from(s))),
         // map(double, JsonValue::Num),
         // map(boolean, JsonValue::Boolean),
-        map(symbol, |s| String::from(s)),
+        map(symbol, |s| Property::Symbol(String::from(s))),
     ))(i)
 }
-
 
 use nom::combinator::map;
 use nom::branch::alt;
@@ -136,5 +102,3 @@ fn quoted_string(i: &str) -> IResult<&str, &str> {
         char('\"'), is_not("\""), char('\"')
     ))(i)
 }
-
-// named!(consume_useless_chars, take_while!(is_whitespace));
