@@ -35,7 +35,6 @@ fn parse_block_header(input: &str) -> IResult<&str, Block> {
     let space = nom::bytes::complete::take_while1(|c| c == ' ');
     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
     let params = nom::multi::many0(block_property);
-
     let (input, (ident, _, properties)) =
         nom::sequence::tuple((method, space, params))(input)?;
 

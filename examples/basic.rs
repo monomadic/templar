@@ -1,6 +1,8 @@
 use templar;
 
 const code: &str = r#"
+blocko
+
 page first second
     title .title
     
