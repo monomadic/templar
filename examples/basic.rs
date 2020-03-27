@@ -1,9 +1,9 @@
 use templar;
 
 const code: &str = r#"
-blocko
+empty
 
-page first second
+page "/" 2 4.56
     title .title
     
     row

@@ -17,12 +17,12 @@ pub fn parse(content:&str) -> ParseResult<Vec<Block>> {
     for (line_index, line) in lines.iter().enumerate() {
         // look for first non-whitespace char,
         if let Some(indentation_level) = indentation_level(line) {
-            let (_, line_without_whitespace) = line.split_at(indentation_level);
-
             if indentation_level == 0 {
-                let (_, block_header) = parse_block_header(line_without_whitespace).unwrap();
-
+                let (_, block_header) = parse_block_header(line).expect("valid parse");
                 blocks.push(block_header);
+            } else {
+                let (_, line_without_whitespace) = line.split_at(indentation_level);
+                println!("{}:--{:?}", indentation_level, line_without_whitespace);
             }
 
         }
@@ -32,7 +32,7 @@ pub fn parse(content:&str) -> ParseResult<Vec<Block>> {
 }
 
 fn parse_block_header(input: &str) -> IResult<&str, Block> {
-    let space = nom::bytes::complete::take_while1(|c| c == ' ');
+    let space = nom::bytes::complete::take_while(|c| c == ' ');
     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
     let params = nom::multi::many0(block_property);
     let (input, (ident, _, properties)) =
@@ -72,12 +72,7 @@ fn parse_str(input: &str) -> IResult<&str, &str> {
 
 /// match an alphanumeric word (symbol) with optional preceding space
 fn symbol(i: &str) -> IResult<&str, &str> {
-    use nom::combinator::opt;
-    use nom::sequence::preceded;
-    use nom::complete::tag;
     use nom::character::complete::alphanumeric1;
-    use nom::character::complete::one_of;
-    use nom::character::is_space;
 
     trim_pre_whitespace(alphanumeric1)(i)
 }
