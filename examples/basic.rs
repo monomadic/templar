@@ -1,11 +1,16 @@
 use templar;
 
 const code: &str = r#"
-layout page-section
-    block row
-        h1 .headline
+page first second
+    title .title
+    
+    row
+        header .title
+
+style a "b" another
+    .title hi
 "#;
 
 fn main() {
-    println!("{:?}", templar::parse(code));
+    println!("----{:?}", templar::parse(code));
 }
