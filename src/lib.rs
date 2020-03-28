@@ -29,6 +29,6 @@ pub enum Node {
     },
     Assignment {
         ident: String,
-        value: String, // this will end up being its own vec of enums
+        value: Property, // this will end up being its own vec of enums
     },
 }

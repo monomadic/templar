@@ -4,6 +4,7 @@ const code: &str = r#"
 empty
 
 page "/" 2 4.56
+    .title "hi"
     title .title
     
     row

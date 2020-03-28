@@ -22,20 +22,68 @@ pub fn parse(content:&str) -> ParseResult<Vec<Block>> {
                 blocks.push(block_header);
             } else {
                 let (_, line_without_whitespace) = line.split_at(indentation_level);
-                println!("{}:--{:?}", indentation_level, line_without_whitespace);
+                let (_, node) = parse_node(line_without_whitespace).expect("valid parse node");
+                // let (_, node) = node_assignment(line_without_whitespace).expect("valid parse node");
+                // note: node must be mutable to allow appending children after
+                println!("{}:--{:?}", indentation_level, node);
             }
-
         }
     }
 
     Ok(blocks)
 }
 
+fn parse_node(i: &str) -> IResult<&str, Node> {
+    use nom::combinator::map;
+    use nom::branch::alt;
+
+    alt((
+        node_assignment,
+        node_call,
+    ))(i)
+}
+
+fn node_assignment(i: &str) -> IResult<&str, Node> {
+    let space = nom::bytes::complete::take_while(|c| c == ' ');
+    let (input, (ident, _, value)) =
+        nom::sequence::tuple((dotted_symbol, space, block_property))(i)?;
+
+    Ok((input, Node::Assignment {
+        ident: String::from(ident),
+        value
+    }))
+}
+
+// matches dotted symbols eg .blah .class
+fn dotted_symbol(i: &str) -> IResult<&str, &str> {
+    use nom::character::complete::char;
+    use nom::character::complete::alphanumeric1;
+    use nom::sequence::preceded;
+
+    preceded(char('.'), alphanumeric1)(i)
+}
+
+// matches function calls inside nodes eg <fn_name> <args>
+fn node_call(i: &str) -> IResult<&str, Node> {
+    let space = nom::bytes::complete::take_while(|c| c == ' ');
+    let params = nom::multi::many0(block_property);
+    let (input, (ident, _, properties)) =
+        nom::sequence::tuple((symbol, space, params))(i)?;
+
+    Ok((input, Node::Call {
+        ident: String::from(ident),
+        properties: Vec::new(),
+        children: Vec::new(),
+    }))
+}
+
+
+
 fn parse_block_header(input: &str) -> IResult<&str, Block> {
     let space = nom::bytes::complete::take_while(|c| c == ' ');
     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
     let params = nom::multi::many0(block_property);
-    
+
     let (input, (ident, _, properties)) =
         nom::sequence::tuple((method, space, params))(input)?;
 
