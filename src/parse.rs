@@ -47,6 +47,9 @@ fn parse_block_header(input: &str) -> IResult<&str, Block> {
 
 // return custom enum later
 fn block_property(i: &str) -> IResult<&str, Property> {
+    use nom::combinator::map;
+    use nom::branch::alt;
+
     alt((
         // map(hash, JsonValue::Object),
         // map(array, JsonValue::Array),
@@ -57,16 +60,9 @@ fn block_property(i: &str) -> IResult<&str, Property> {
     ))(i)
 }
 
-use nom::combinator::map;
-use nom::branch::alt;
-use nom::sequence::delimited;
-use nom::character::is_alphabetic;
-use nom::bytes::complete::take_while;
-use nom::character::complete::{
-    char, alphanumeric0, alpha1, digit1
-};
-
 fn parse_str(input: &str) -> IResult<&str, &str> {
+    use nom::character::complete::alphanumeric0;
+
     alphanumeric0(input)
 }
 
@@ -77,7 +73,6 @@ fn symbol(i: &str) -> IResult<&str, &str> {
     trim_pre_whitespace(alphanumeric1)(i)
 }
 
-use nom::error::VerboseError;
 fn trim_pre_whitespace<'a, O1, F>(inner: F) -> impl Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>
 where
   F: Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>,
@@ -91,6 +86,8 @@ where
 
 fn quoted_string(i: &str) -> IResult<&str, &str> {
     use nom::bytes::complete::is_not;
+    use nom::character::complete::char;
+    use nom::sequence::delimited;
 
     trim_pre_whitespace(delimited(
         char('\"'), is_not("\""), char('\"')
