@@ -22,6 +22,7 @@ pub fn parse(i:&str) -> IResult<&str, Vec<Node>> {
 
 fn _node(i: &str) -> IResult<&str, Node> {
     alt((
+        map(assignment, |node| node),
         map(block, |(_, ident, _, params, _)| Node::Block {
             ident: String::from(ident),
             properties: params,
@@ -57,7 +58,7 @@ pub fn block(i: &str) -> IResult<&str, (&str, &str, &str, Vec<Property>, &str)> 
     )(i)
 }
 
-fn node_assignment(i: &str) -> IResult<&str, Node> {
+fn assignment(i: &str) -> IResult<&str, Node> {
     let space = nom::bytes::complete::take_while(|c| c == ' ');
     let (input, (ident, _, value)) =
         nom::sequence::tuple((dotted_symbol, space, block_property))(i)?;
@@ -118,6 +119,7 @@ fn block_property(i: &str) -> IResult<&str, Property> {
         map(double, |f| Property::Float(f)),
         map(digit1, |i:&str| Property::Number(i.parse::<i64>().unwrap_or(0))),
         map(boolean, |b| Property::Boolean(b)),
+        map(dotted_symbol, |s| Property::DottedSymbol(String::from(s))),
         map(symbol, |s| Property::Symbol(String::from(s))),
     ))(i)
 }
