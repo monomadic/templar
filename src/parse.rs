@@ -4,43 +4,62 @@
 use crate::*;
 use nom::*;
 
+use nom::branch::alt;
+use nom::combinator::map;
+use nom::combinator::opt;
+use nom::character::complete::space0;
+use nom::character::complete::multispace1;
+use nom::character::complete::line_ending;
+use nom::character::complete::alphanumeric1;
+use nom::character::complete::one_of;
+
 /// returns the position of the first non-whitespace character, or None if the line is entirely whitespace.
-fn indentation_level(str: &str) -> Option<usize> {
-    str.chars().position(|c| !c.is_whitespace())
+fn indentation_level(i: &str) -> IResult<&str, usize> {
+    nom::multi::many0_count(one_of(" \t"))(i)
 }
 
 /// parses a string into a node graph
-pub fn parse(content:&str) -> ParseResult<Vec<Block>> {
-    let lines: Vec<String> = content.lines().map(|s|s.to_string()).collect();
-    let mut blocks: Vec<Block> = Vec::new();
-
-    for (line_index, line) in lines.iter().enumerate() {
-        // look for first non-whitespace char,
-        if let Some(indentation_level) = indentation_level(line) {
-            if indentation_level == 0 {
-                let (_, block_header) = parse_block_header(line).expect("valid parse");
-                blocks.push(block_header);
-            } else {
-                let (_, line_without_whitespace) = line.split_at(indentation_level);
-                let (_, node) = parse_node(line_without_whitespace).expect("valid parse node");
-                // let (_, node) = node_assignment(line_without_whitespace).expect("valid parse node");
-                // note: node must be mutable to allow appending children after
-                println!("{}:--{:?}", indentation_level, node);
-            }
-        }
-    }
-
-    Ok(blocks)
+pub fn parse(i:&str) -> IResult<&str, Vec<Node>> {
+    nom::multi::many0(node)(i)
 }
 
-fn parse_node(i: &str) -> IResult<&str, Node> {
-    use nom::combinator::map;
-    use nom::branch::alt;
-
+fn _node(i: &str) -> IResult<&str, Node> {
     alt((
-        node_assignment,
-        node_call,
+        map(block, |(_, ident, _, params, _)| Node::Block {
+            ident: String::from(ident),
+            properties: params,
+            children: Vec::new(),
+        }),
+        map(multispace1, |s| Node::WhiteSpace),
     ))(i)
+}
+
+fn node(i: &str) -> IResult<&str, Node> {
+    let (_, indentation) = indentation_level(i)?;
+    let (mut r, mut n) =_node(i)?;
+    let (_, next_line_indentation) = indentation_level(r)?;
+
+    // println!("1: {} 2: {}", indentation, next_line_indentation);
+
+    if (next_line_indentation > indentation) {
+        let (r, children) = nom::multi::many0(node)(r)?;
+        match n {
+            Node::Block{ident, properties, ..} => return Ok((r, Node::Block {
+                ident, properties, children
+            })),
+            _ => (),
+        }
+        println!("children: {:?}", children);
+    }
+
+    Ok((r, n))
+}
+
+pub fn block(i: &str) -> IResult<&str, (&str, &str, &str, Vec<Property>, &str)> {
+    let params = nom::multi::many0(block_property);
+    nom::sequence::tuple(
+        (space0, alphanumeric1, space0, params, line_ending)
+    )(i)
 }
 
 fn node_assignment(i: &str) -> IResult<&str, Node> {
@@ -57,7 +76,6 @@ fn node_assignment(i: &str) -> IResult<&str, Node> {
 // matches dotted symbols eg .blah .class
 fn dotted_symbol(i: &str) -> IResult<&str, &str> {
     use nom::character::complete::char;
-    use nom::character::complete::alphanumeric1;
     use nom::sequence::preceded;
 
     preceded(char('.'), alphanumeric1)(i)
@@ -70,7 +88,7 @@ fn node_call(i: &str) -> IResult<&str, Node> {
     let (input, (ident, _, properties)) =
         nom::sequence::tuple((symbol, space, params))(i)?;
 
-    Ok((input, Node::Call {
+    Ok((input, Node::Block {
         ident: String::from(ident),
         properties: Vec::new(),
         children: Vec::new(),
@@ -79,15 +97,15 @@ fn node_call(i: &str) -> IResult<&str, Node> {
 
 
 
-fn parse_block_header(input: &str) -> IResult<&str, Block> {
+fn parse_block_header(i: &str) -> IResult<&str, Block> {
     let space = nom::bytes::complete::take_while(|c| c == ' ');
     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
     let params = nom::multi::many0(block_property);
 
-    let (input, (ident, _, properties)) =
-        nom::sequence::tuple((method, space, params))(input)?;
+    let (r, (ident, _, properties)) =
+        nom::sequence::tuple((method, space, params))(i)?;
 
-    Ok(("", Block {
+    Ok((r, Block {
         ident: String::from(ident),
         properties,
         nodes: Vec::new(),
@@ -96,9 +114,6 @@ fn parse_block_header(input: &str) -> IResult<&str, Block> {
 
 // return custom enum later
 fn block_property(i: &str) -> IResult<&str, Property> {
-    use nom::combinator::map;
-    use nom::branch::alt;
-
     alt((
         // map(hash, JsonValue::Object),
         // map(array, JsonValue::Array),
@@ -127,7 +142,6 @@ where
   F: Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>,
 {
     use nom::sequence::preceded;
-    use nom::combinator::opt;
     use nom::character::complete::one_of;
 
     preceded(opt(one_of(" \t")), inner)

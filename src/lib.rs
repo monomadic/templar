@@ -22,9 +22,11 @@ pub enum Property {
 
 #[derive(Debug, Clone)]
 pub enum Node {
-    Call {
+    WhiteSpace,
+    Comment(String),
+    Block {
         ident: String,
-        properties: Vec<String>,
+        properties: Vec<Property>,
         children: Vec<Node>,
     },
     Assignment {
