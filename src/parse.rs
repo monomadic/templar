@@ -34,7 +34,7 @@ fn _node(i: &str) -> IResult<&str, Node> {
 
 fn node(i: &str) -> IResult<&str, Node> {
     let (_, indentation) = indentation_level(i)?;
-    let (mut r, mut n) =_node(i)?;
+    let (r, n) =_node(i)?;
     let (_, next_line_indentation) = indentation_level(r)?;
 
     if next_line_indentation > indentation {
@@ -75,33 +75,33 @@ fn dotted_symbol(i: &str) -> IResult<&str, &str> {
 }
 
 // matches function calls inside nodes eg <fn_name> <args>
-fn node_call(i: &str) -> IResult<&str, Node> {
-    let space = nom::bytes::complete::take_while(|c| c == ' ');
-    let params = nom::multi::many0(block_property);
-    let (input, (ident, _, properties)) =
-        nom::sequence::tuple((symbol, space, params))(i)?;
+// fn node_call(i: &str) -> IResult<&str, Node> {
+//     let space = nom::bytes::complete::take_while(|c| c == ' ');
+//     let params = nom::multi::many0(block_property);
+//     let (input, (ident, _, properties)) =
+//         nom::sequence::tuple((symbol, space, params))(i)?;
 
-    Ok((input, Node::Block {
-        ident: String::from(ident),
-        properties: Vec::new(),
-        children: Vec::new(),
-    }))
-}
+//     Ok((input, Node::Block {
+//         ident: String::from(ident),
+//         properties: Vec::new(),
+//         children: Vec::new(),
+//     }))
+// }
 
-fn parse_block_header(i: &str) -> IResult<&str, Block> {
-    let space = nom::bytes::complete::take_while(|c| c == ' ');
-    let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
-    let params = nom::multi::many0(block_property);
+// fn parse_block_header(i: &str) -> IResult<&str, Block> {
+//     let space = nom::bytes::complete::take_while(|c| c == ' ');
+//     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
+//     let params = nom::multi::many0(block_property);
 
-    let (r, (ident, _, properties)) =
-        nom::sequence::tuple((method, space, params))(i)?;
+//     let (r, (ident, _, properties)) =
+//         nom::sequence::tuple((method, space, params))(i)?;
 
-    Ok((r, Block {
-        ident: String::from(ident),
-        properties,
-        nodes: Vec::new(),
-    }))
-}
+//     Ok((r, Block {
+//         ident: String::from(ident),
+//         properties,
+//         nodes: Vec::new(),
+//     }))
+// }
 
 fn boolean(i: &str) -> IResult<&str, bool> {
     alt((
@@ -115,20 +115,20 @@ fn block_property(i: &str) -> IResult<&str, Property> {
     alt((
         // map(hash, JsonValue::Object),
         // map(array, JsonValue::Array),
-        map(quoted_string, |s| Property::QuotedString(String::from(s))),
-        map(double, |f| Property::Float(f)),
-        map(digit1, |i:&str| Property::Number(i.parse::<i64>().unwrap_or(0))),
-        map(boolean, |b| Property::Boolean(b)),
-        map(dotted_symbol, |s| Property::DottedSymbol(String::from(s))),
-        map(symbol, |s| Property::Symbol(String::from(s))),
+        map(quoted_string,  |s| Property::QuotedString(String::from(s))),
+        map(double,         |f| Property::Float(f)),
+        map(digit1,         |i:&str| Property::Number(i.parse::<i64>().unwrap_or(0))),
+        map(boolean,        |b| Property::Boolean(b)),
+        map(dotted_symbol,  |s| Property::DottedSymbol(String::from(s))),
+        map(symbol,         |s| Property::Symbol(String::from(s))),
     ))(i)
 }
 
-fn parse_str(input: &str) -> IResult<&str, &str> {
-    use nom::character::complete::alphanumeric0;
+// fn parse_str(input: &str) -> IResult<&str, &str> {
+//     use nom::character::complete::alphanumeric0;
 
-    alphanumeric0(input)
-}
+//     alphanumeric0(input)
+// }
 
 /// match an alphanumeric word (symbol) with optional preceding space
 fn symbol(i: &str) -> IResult<&str, &str> {

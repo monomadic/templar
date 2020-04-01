@@ -21,7 +21,7 @@ block 2 1.1
 
 fn main() {
     println!("----{:#?}", templar::parse(CODE));
-    // println!("----{:#?}", templar::parse(CURRENT));
-    // println!("----{:#?}", templar::parse("header title\ntwo three four\nfive six\nseven eight\n"));
-    // println!("----{:#?}", templar::parse("hello \"b\"\n"));
+    println!("----{:#?}", templar::parse(CURRENT));
+    println!("----{:#?}", templar::parse("header title\ntwo three four\nfive six\nseven eight\n"));
+    println!("----{:#?}", templar::parse("hello \"b\"\n"));
 }

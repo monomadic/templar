@@ -1,7 +1,7 @@
-mod error;
+// mod error;
 mod parse;
 
-pub use error::ParseError;
+// pub use error::ParseError;
 pub use parse::parse;
 
 // pub type ParseResult<T> = Result<T, ParseError>;

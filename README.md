@@ -1,3 +1,3 @@
 <img src="assets/logo.png" alt="templar-logo" height="150">
 
-A haml-like extensible templating library for rust.
+A declarative language for UI layout and generation.
