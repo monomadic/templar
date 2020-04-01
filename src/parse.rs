@@ -5,13 +5,10 @@ use crate::*;
 use nom::*;
 
 use nom::branch::alt;
-use nom::combinator::map;
-use nom::combinator::opt;
-use nom::character::complete::space0;
-use nom::character::complete::multispace1;
-use nom::character::complete::line_ending;
-use nom::character::complete::alphanumeric1;
-use nom::character::complete::one_of;
+use nom::combinator::{ map, opt, value };
+use nom::character::complete::{ space0, multispace1, line_ending, alphanumeric1, one_of, char, digit1 };
+use nom::number::complete::{ double };
+use nom::bytes::complete::tag;
 
 /// returns the position of the first non-whitespace character, or None if the line is entirely whitespace.
 fn indentation_level(i: &str) -> IResult<&str, usize> {
@@ -30,7 +27,7 @@ fn _node(i: &str) -> IResult<&str, Node> {
             properties: params,
             children: Vec::new(),
         }),
-        map(multispace1, |s| Node::WhiteSpace),
+        map(multispace1, |_| Node::WhiteSpace),
     ))(i)
 }
 
@@ -39,9 +36,7 @@ fn node(i: &str) -> IResult<&str, Node> {
     let (mut r, mut n) =_node(i)?;
     let (_, next_line_indentation) = indentation_level(r)?;
 
-    // println!("1: {} 2: {}", indentation, next_line_indentation);
-
-    if (next_line_indentation > indentation) {
+    if next_line_indentation > indentation {
         let (r, children) = nom::multi::many0(node)(r)?;
         match n {
             Node::Block{ident, properties, ..} => return Ok((r, Node::Block {
@@ -75,10 +70,7 @@ fn node_assignment(i: &str) -> IResult<&str, Node> {
 
 // matches dotted symbols eg .blah .class
 fn dotted_symbol(i: &str) -> IResult<&str, &str> {
-    use nom::character::complete::char;
-    use nom::sequence::preceded;
-
-    preceded(char('.'), alphanumeric1)(i)
+    nom::sequence::preceded(char('.'), alphanumeric1)(i)
 }
 
 // matches function calls inside nodes eg <fn_name> <args>
@@ -95,8 +87,6 @@ fn node_call(i: &str) -> IResult<&str, Node> {
     }))
 }
 
-
-
 fn parse_block_header(i: &str) -> IResult<&str, Block> {
     let space = nom::bytes::complete::take_while(|c| c == ' ');
     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
@@ -112,14 +102,22 @@ fn parse_block_header(i: &str) -> IResult<&str, Block> {
     }))
 }
 
+fn boolean(i: &str) -> IResult<&str, bool> {
+    alt((
+        value(true, tag("true")),
+        value(false, tag("false")),
+    ))(i)
+}
+
 // return custom enum later
 fn block_property(i: &str) -> IResult<&str, Property> {
     alt((
         // map(hash, JsonValue::Object),
         // map(array, JsonValue::Array),
         map(quoted_string, |s| Property::QuotedString(String::from(s))),
-        // map(double, JsonValue::Num),
-        // map(boolean, JsonValue::Boolean),
+        map(double, |f| Property::Float(f)),
+        map(digit1, |i:&str| Property::Number(i.parse::<i64>().unwrap_or(0))),
+        map(boolean, |b| Property::Boolean(b)),
         map(symbol, |s| Property::Symbol(String::from(s))),
     ))(i)
 }
@@ -132,8 +130,6 @@ fn parse_str(input: &str) -> IResult<&str, &str> {
 
 /// match an alphanumeric word (symbol) with optional preceding space
 fn symbol(i: &str) -> IResult<&str, &str> {
-    use nom::character::complete::alphanumeric1;
-
     trim_pre_whitespace(alphanumeric1)(i)
 }
 
@@ -142,14 +138,12 @@ where
   F: Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>,
 {
     use nom::sequence::preceded;
-    use nom::character::complete::one_of;
 
     preceded(opt(one_of(" \t")), inner)
 }
 
 fn quoted_string(i: &str) -> IResult<&str, &str> {
     use nom::bytes::complete::is_not;
-    use nom::character::complete::char;
     use nom::sequence::delimited;
 
     trim_pre_whitespace(delimited(

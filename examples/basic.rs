@@ -1,6 +1,6 @@
 use templar;
 
-const code: &str = r#"
+const CODE: &str = r#"
 page "/" 2 4.56
     .title "hi"
     title .title
@@ -12,14 +12,16 @@ style a "b" another
     .title hi
 "#;
 
-const current: &str = r#"
-block symbol
+const CURRENT: &str = r#"
+block 2 1.1
     member example
     second example
         third example
 "#;
 
 fn main() {
-    println!("----{:#?}", templar::parse(current));
+    // println!("----{:#?}", templar::parse(CODE));
+    println!("----{:#?}", templar::parse(CURRENT));
     // println!("----{:#?}", templar::parse("header title\ntwo three four\nfive six\nseven eight\n"));
+    // println!("----{:#?}", templar::parse("hello \"b\"\n"));
 }

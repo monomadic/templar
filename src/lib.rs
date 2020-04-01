@@ -16,8 +16,11 @@ pub struct Block {
 
 #[derive(Debug, Clone)]
 pub enum Property {
-    Symbol(String),
+    Boolean(bool),
+    Float(f64),
+    Number(i64),
     QuotedString(String),
+    Symbol(String),
 }
 
 #[derive(Debug, Clone)]
