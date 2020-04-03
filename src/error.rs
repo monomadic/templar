@@ -6,10 +6,12 @@ pub enum TemplarError {
     ParseError,
 }
 
+impl Error for TemplarError;
+
 #[derive(Debug)]
 pub struct ParseError {
-    pub line_number: usize,
-    pub context: Vec<String>, // last few lines
-    pub character: Option<u64>,
+    // pub line_number: usize,
+    // pub context: Vec<String>, // last few lines
+    // pub character: Option<u64>,
     pub message: String,
 }

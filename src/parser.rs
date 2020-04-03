@@ -2,6 +2,7 @@
 // https://github.com/benkay86/nom-tutorial
 
 use crate::*;
+use error::*;
 use nom::*;
 
 use nom::branch::alt;
@@ -21,6 +22,7 @@ pub fn run(i:&str) -> IResult<&str, Vec<Node>> {
 }
 
 fn _node(i: &str) -> IResult<&str, Node> {
+    println!("-- {:?}", i);
     alt((
         map(assignment, |node| node),
         map(block, |(_, ident, _, params, _)| Node::Block {
@@ -36,32 +38,73 @@ fn node(i: &str) -> IResult<&str, Node> {
     let (_, indentation) = indentation_level(i)?;
     let (r, n) =_node(i)?;
     let (_, next_line_indentation) = indentation_level(r)?;
+    let mut next_line_indentation = next_line_indentation;
+    let mut children = Vec::new();
+    let mut remainder = r;
 
-    if next_line_indentation > indentation {
-        let (r, children) = nom::multi::many0(node)(r)?;
-        match n {
-            Node::Block{ident, properties, ..} => return Ok((r, Node::Block {
-                ident, properties, children
-            })),
-            _ => (),
-        }
+    println!("node found {:?}", n);
+    println!("while: {} > {}", next_line_indentation, indentation);
+
+    // if the next line if further indented (a child node of this node),
+    while next_line_indentation > indentation {
+
+        // take a node
+        let (r, child) = node(remainder)?;
+        remainder = r;
+        println!("child found: {:?}", &child);
+        children.push(child);
+
+        let (_, next_line) = indentation_level(r)?;
+        next_line_indentation = next_line;
+
+        // match as many child nodes as possible
+        // let (r, children) = nom::multi::many0(node)(r)?;
+
+        // note: property with children found at this point, should return an error.
+        // panic!("property with children found");
+
+        // match n {
+        //     Node::Block{ident, properties, ..} => return Ok((r, Node::Block {
+        //         ident, properties, children
+        //     })),
+        //     _ => { return Err(Box::new(TemplarError::ParseError {
+        //         message: "properties cannot have child nodes.".into()
+        //     })) },
+        // }
         // println!("children: {:?}", children);
     }
 
-    Ok((r, n))
+    // if the current node is a block, return it
+    // ( children are not picked up in the first pass )
+    if let Node::Block{ident, properties, ..} = n {
+        return Ok((remainder, Node::Block {
+            ident, properties, children
+        }))
+    }
+
+    // the node must be a property
+    Ok((remainder, n))
 }
 
 pub fn block(i: &str) -> IResult<&str, (&str, &str, &str, Vec<Property>, &str)> {
+    use nom::multi::many1;
     let params = nom::multi::many0(block_property);
+
     nom::sequence::tuple(
-        (space0, alphanumeric1, space0, params, line_ending)
+        (space0, alphanumeric1, space0, params, take_while_newline)
     )(i)
+}
+
+fn take_while_newline(i: &str) -> IResult<&str, &str> {
+    nom::bytes::complete::take_while(|c| c == '\n')(i)
 }
 
 fn assignment(i: &str) -> IResult<&str, Node> {
     let space = nom::bytes::complete::take_while(|c| c == ' ');
-    let (input, (ident, _, value)) =
-        nom::sequence::tuple((dotted_symbol, space, block_property))(i)?;
+    let (input, (_, ident, _, value, _)) =
+        nom::sequence::tuple(
+            (space0, dotted_symbol, space, block_property, take_while_newline)
+        )(i)?;
 
     Ok((input, Node::Assignment {
         ident: String::from(ident),
@@ -71,7 +114,7 @@ fn assignment(i: &str) -> IResult<&str, Node> {
 
 // matches dotted symbols eg .blah .class
 fn dotted_symbol(i: &str) -> IResult<&str, &str> {
-    nom::sequence::preceded(char('.'), alphanumeric1)(i)
+    trim_pre_whitespace(nom::sequence::preceded(char('.'), alphanumeric1))(i)
 }
 
 // matches function calls inside nodes eg <fn_name> <args>
@@ -141,7 +184,7 @@ where
 {
     use nom::sequence::preceded;
 
-    preceded(opt(one_of(" \t")), inner)
+    preceded(opt(one_of(" \t\n\r")), inner)
 }
 
 fn quoted_string(i: &str) -> IResult<&str, &str> {
