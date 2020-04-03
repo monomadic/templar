@@ -8,6 +8,7 @@ use nom::*;
 use nom::branch::alt;
 use nom::combinator::{ map, opt, value };
 use nom::character::complete::{ space0, multispace0, multispace1, line_ending, alphanumeric1, one_of, char, digit1 };
+use nom::multi::many1;
 use nom::number::complete::{ double };
 use nom::bytes::complete::tag;
 
@@ -22,7 +23,7 @@ pub fn run(i:&str) -> IResult<&str, Vec<Node>> {
 }
 
 fn _node(i: &str) -> IResult<&str, Node> {
-    println!("-- {:?}", i);
+    // println!("-- {:?}", i);
     alt((
         map(assignment, |node| node),
         map(block, |(_, ident, _, params, _)| Node::Block {
@@ -30,8 +31,20 @@ fn _node(i: &str) -> IResult<&str, Node> {
             properties: params,
             children: Vec::new(),
         }),
+        map(anonymous_property, |p| Node::AnonymousProperty(p)),
         map(multispace1, |_| Node::WhiteSpace),
     ))(i)
+}
+
+fn anonymous_property(i: &str) -> IResult<&str, Property> {
+    use nom::multi::many1;
+    let params = nom::multi::many0(block_property);
+
+    let (remainder, (_, property, _)) = nom::sequence::tuple(
+        (multispace0, block_property, take_while_newline)
+    )(i)?;
+
+    Ok((remainder, property))
 }
 
 fn node(i: &str) -> IResult<&str, Node> {
@@ -42,8 +55,8 @@ fn node(i: &str) -> IResult<&str, Node> {
     let mut children = Vec::new();
     let mut remainder = r;
 
-    println!("node found {:?}", n);
-    println!("while: {} > {}", next_line_indentation, indentation);
+    // println!("node found {:?}", n);
+    // println!("while: {} > {}", next_line_indentation, indentation);
 
     // if the next line if further indented (a child node of this node),
     while next_line_indentation > indentation {
@@ -51,7 +64,7 @@ fn node(i: &str) -> IResult<&str, Node> {
         // take a node
         let (r, child) = node(remainder)?;
         remainder = r;
-        println!("child found: {:?}", &child);
+        // println!("child found: {:?}", &child);
         children.push(child);
 
         let (_, next_line) = indentation_level(r)?;
@@ -86,6 +99,19 @@ fn node(i: &str) -> IResult<&str, Node> {
     Ok((remainder, n))
 }
 
+pub fn symbolic1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
+where
+  T: InputTakeAtPosition,
+  <T as InputTakeAtPosition>::Item: AsChar + Clone,
+{
+  input.split_at_position1_complete(|item| {
+    let c = item.clone().as_char();
+    !(c == '-' || c == '_' || item.is_alphanum())
+  },
+    ErrorKind::AlphaNumeric
+  )
+}
+
 pub fn block(i: &str) -> IResult<&str, (&str, &str, &str, Vec<Property>, &str)> {
     use nom::multi::many1;
     let params = nom::multi::many0(block_property);
@@ -114,7 +140,7 @@ fn assignment(i: &str) -> IResult<&str, Node> {
 
 // matches dotted symbols eg .blah .class
 fn dotted_symbol(i: &str) -> IResult<&str, &str> {
-    trim_pre_whitespace(nom::sequence::preceded(char('.'), alphanumeric1))(i)
+    trim_pre_whitespace(nom::sequence::preceded(char('.'), symbolic1))(i)
 }
 
 // matches function calls inside nodes eg <fn_name> <args>

@@ -58,6 +58,7 @@ pub enum Node {
         ident: String,
         value: Property, // this will end up being its own vec of enums
     },
+    AnonymousProperty(Property),
 }
 
 pub struct UnwoundNode {
