@@ -7,7 +7,7 @@ use nom::*;
 
 use nom::branch::alt;
 use nom::combinator::{ map, opt, value };
-use nom::character::complete::{ space0, multispace1, line_ending, alphanumeric1, one_of, char, digit1 };
+use nom::character::complete::{ space0, multispace0, multispace1, line_ending, alphanumeric1, one_of, char, digit1 };
 use nom::number::complete::{ double };
 use nom::bytes::complete::tag;
 
@@ -91,7 +91,7 @@ pub fn block(i: &str) -> IResult<&str, (&str, &str, &str, Vec<Property>, &str)> 
     let params = nom::multi::many0(block_property);
 
     nom::sequence::tuple(
-        (space0, alphanumeric1, space0, params, take_while_newline)
+        (multispace0, alphanumeric1, space0, params, take_while_newline)
     )(i)
 }
 
@@ -103,7 +103,7 @@ fn assignment(i: &str) -> IResult<&str, Node> {
     let space = nom::bytes::complete::take_while(|c| c == ' ');
     let (input, (_, ident, _, value, _)) =
         nom::sequence::tuple(
-            (space0, dotted_symbol, space, block_property, take_while_newline)
+            (multispace0, dotted_symbol, space, block_property, take_while_newline)
         )(i)?;
 
     Ok((input, Node::Assignment {
