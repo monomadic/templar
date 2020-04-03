@@ -15,8 +15,8 @@ fn indentation_level(i: &str) -> IResult<&str, usize> {
     nom::multi::many0_count(one_of(" \t"))(i)
 }
 
-/// parses a string into a node graph
-pub fn parse(i:&str) -> IResult<&str, Vec<Node>> {
+/// returns a nom combinator version of the parser
+pub fn run(i:&str) -> IResult<&str, Vec<Node>> {
     nom::multi::many0(node)(i)
 }
 
@@ -45,7 +45,7 @@ fn node(i: &str) -> IResult<&str, Node> {
             })),
             _ => (),
         }
-        println!("children: {:?}", children);
+        // println!("children: {:?}", children);
     }
 
     Ok((r, n))
