@@ -4,22 +4,8 @@ use std::collections::HashMap;
 
 /// run pre-processors for a node tree
 pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> { // provide fns also
-    let mut fns: HashMap<String, Function> = HashMap::new();
     let locals = extract_variables(&nodes);
-
-    // collect all function declarations (only valid at the top level)
-    for node in nodes.clone() {
-        match node.clone() {
-            Node::FunctionDeclaration { ident, arguments, children } => {
-                println!("found fn declaration: {} {:?}", ident, arguments);
-                fns.insert(ident.to_string(), Function {
-                    arguments,
-                    children
-                });
-            },
-            _ => (),
-        }
-    }
+    let fns = collect_function_definitions(&nodes)?;
 
     unwind_children(&nodes, &locals, &fns)
 }
@@ -87,4 +73,20 @@ fn extract_variables(nodes: &Vec<Node>) -> HashMap<String, Property> {
     }
 
     return variables;
+}
+
+fn collect_function_definitions(nodes: &Vec<Node>) -> ParseResult<HashMap<String, Function>> {
+    let mut fns: HashMap<String, Function> = HashMap::new();
+
+    // collect all function declarations
+    for node in nodes {
+        if let Node::FunctionDeclaration { ident, arguments, children } = node {
+            fns.insert(ident.to_string(), Function {
+                arguments: arguments.clone(),
+                children: children.clone()
+            });
+        };
+    }
+
+    Ok(fns)
 }
