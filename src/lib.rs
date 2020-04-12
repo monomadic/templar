@@ -1,6 +1,6 @@
 // mod error;
 pub mod parser;
-pub mod interpreter;
+pub mod postprocessor;
 
 // pub use error::ParseError;
 // pub use parser::run;
@@ -47,23 +47,36 @@ impl fmt::Display for Property {
 
 #[derive(Debug, Clone)]
 pub enum Node {
-    WhiteSpace,
+    WhiteSpace, // remove this entirely
     Comment(String),
-    Block {
+    FunctionDeclaration {
         ident: String,
-        properties: Vec<Property>, // todo: change to argument object
+        arguments: Vec<String>,
         children: Vec<Node>,
     },
-    Assignment { // rename to property
+    Block { // rename to function call?
+        ident: String,
+        properties: Vec<Property>, // todo: change to arguments
+        children: Vec<Node>,
+    },
+    Assignment { // rename to PropertyAssignment
         ident: String,
         value: Property, // this will end up being its own vec of enums
     },
     AnonymousProperty(Property),
 }
 
-pub struct UnwoundNode {
+pub struct Argument {
     ident: String,
+    // type: 
+    default: Option<Property>,
+}
+
+
+#[derive(Debug, Clone)]
+pub struct UnwoundNode {
+    pub ident: String,
     // description: Option<String>,
-    properties: Vec<Property>,
-    children: Vec<UnwoundNode>,
+    pub properties: Vec<Property>, // todo: should be a hashmap of values HashMap<ident, property>
+    pub children: Vec<UnwoundNode>,
 }

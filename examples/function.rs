@@ -1,15 +1,14 @@
 use templar;
 
 const CODE: &str = r#"
-page "/"
-    .title "hi"
-    title .title
-    
-    row
-        header .title
 
-style a "b" another
-    .title hi
+print "this is a direct function call."
+
+say "now I am calling a function I will define."
+
+:say .text
+    print .text
+
 "#;
 
 fn main() {

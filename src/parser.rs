@@ -26,13 +26,14 @@ fn _node(i: &str) -> IResult<&str, Node> {
     // println!("-- {:?}", i);
     alt((
         map(assignment, |node| node),
+        function_declaration,
         map(block, |(_, ident, _, params, _)| Node::Block {
             ident: String::from(ident),
             properties: params,
             children: Vec::new(),
         }),
         map(anonymous_property, |p| Node::AnonymousProperty(p)),
-        map(multispace1, |_| Node::WhiteSpace),
+        map(multispace1, |_| Node::WhiteSpace), // remove this
     ))(i)
 }
 
@@ -55,12 +56,8 @@ fn node(i: &str) -> IResult<&str, Node> {
     let mut children = Vec::new();
     let mut remainder = r;
 
-    // println!("node found {:?}", n);
-    // println!("while: {} > {}", next_line_indentation, indentation);
-
     // if the next line if further indented (a child node of this node),
     while next_line_indentation > indentation {
-
         // take a node
         let (r, child) = node(remainder)?;
         remainder = r;
@@ -69,22 +66,6 @@ fn node(i: &str) -> IResult<&str, Node> {
 
         let (_, next_line) = indentation_level(r)?;
         next_line_indentation = next_line;
-
-        // match as many child nodes as possible
-        // let (r, children) = nom::multi::many0(node)(r)?;
-
-        // note: property with children found at this point, should return an error.
-        // panic!("property with children found");
-
-        // match n {
-        //     Node::Block{ident, properties, ..} => return Ok((r, Node::Block {
-        //         ident, properties, children
-        //     })),
-        //     _ => { return Err(Box::new(TemplarError::ParseError {
-        //         message: "properties cannot have child nodes.".into()
-        //     })) },
-        // }
-        // println!("children: {:?}", children);
     }
 
     // if the current node is a block, return it
@@ -95,10 +76,32 @@ fn node(i: &str) -> IResult<&str, Node> {
         }))
     }
 
+    if let Node::FunctionDeclaration{ident, arguments, ..} = n {
+        return Ok((remainder, Node::FunctionDeclaration {
+            ident, arguments, children
+        }))
+    }
+
     // the node must be a property
     Ok((remainder, n))
 }
 
+fn function_declaration(i: &str) -> IResult<&str, Node> {
+    let (input, (_, ident, _, arguments, _)) =
+        nom::sequence::tuple(
+            (multispace0, colon_symbol, space0, nom::multi::many0(dotted_symbol), take_while_newline)
+        )(i)?;
+
+    return Ok((input,
+        Node::FunctionDeclaration {
+            ident: ident.into(),
+            arguments: arguments.into_iter().map(|a| a.to_string()).collect(),
+            children: Vec::new(),
+        }
+    ))
+}
+
+/// valid characters for an ident
 pub fn symbolic1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
   T: InputTakeAtPosition,
@@ -113,7 +116,6 @@ where
 }
 
 pub fn block(i: &str) -> IResult<&str, (&str, &str, &str, Vec<Property>, &str)> {
-    use nom::multi::many1;
     let params = nom::multi::many0(block_property);
 
     nom::sequence::tuple(
@@ -143,34 +145,10 @@ fn dotted_symbol(i: &str) -> IResult<&str, &str> {
     trim_pre_whitespace(nom::sequence::preceded(char('.'), symbolic1))(i)
 }
 
-// matches function calls inside nodes eg <fn_name> <args>
-// fn node_call(i: &str) -> IResult<&str, Node> {
-//     let space = nom::bytes::complete::take_while(|c| c == ' ');
-//     let params = nom::multi::many0(block_property);
-//     let (input, (ident, _, properties)) =
-//         nom::sequence::tuple((symbol, space, params))(i)?;
-
-//     Ok((input, Node::Block {
-//         ident: String::from(ident),
-//         properties: Vec::new(),
-//         children: Vec::new(),
-//     }))
-// }
-
-// fn parse_block_header(i: &str) -> IResult<&str, Block> {
-//     let space = nom::bytes::complete::take_while(|c| c == ' ');
-//     let method = nom::bytes::complete::take_while1(nom::AsChar::is_alpha);
-//     let params = nom::multi::many0(block_property);
-
-//     let (r, (ident, _, properties)) =
-//         nom::sequence::tuple((method, space, params))(i)?;
-
-//     Ok((r, Block {
-//         ident: String::from(ident),
-//         properties,
-//         nodes: Vec::new(),
-//     }))
-// }
+// matches function declaration eg :blah
+fn colon_symbol(i: &str) -> IResult<&str, &str> {
+    trim_pre_whitespace(nom::sequence::preceded(char(':'), symbolic1))(i)
+}
 
 fn boolean(i: &str) -> IResult<&str, bool> {
     alt((
@@ -193,20 +171,13 @@ fn block_property(i: &str) -> IResult<&str, Property> {
     ))(i)
 }
 
-// fn parse_str(input: &str) -> IResult<&str, &str> {
-//     use nom::character::complete::alphanumeric0;
-
-//     alphanumeric0(input)
-// }
-
 /// match an alphanumeric word (symbol) with optional preceding space
 fn symbol(i: &str) -> IResult<&str, &str> {
     trim_pre_whitespace(alphanumeric1)(i)
 }
 
 fn trim_pre_whitespace<'a, O1, F>(inner: F) -> impl Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>
-where
-  F: Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>,
+where F: Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>,
 {
     use nom::sequence::preceded;
 
