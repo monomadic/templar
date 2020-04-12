@@ -4,14 +4,13 @@ use std::collections::HashMap;
 
 /// run pre-processors for a node tree
 pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
-    use std::collections::HashMap;
     let mut fns: HashMap<String, Node> = HashMap::new();
 
     // collect all function declarations (only valid at the top level)
     for node in nodes.clone() {
         match node.clone() {
             Node::FunctionDeclaration { ident, arguments, children } => {
-                println!("found fn declaration: {}", ident);
+                println!("found fn declaration: {} {:?}", ident, arguments);
                 fns.insert(ident.to_string(), node.clone());
             },
             _ => (),
@@ -39,19 +38,19 @@ pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
 fn unwind_children(nodes: &Vec<Node>, fns: &HashMap<String, Node>) -> Vec<UnwoundNode> {
     let mut unwound_nodes: Vec<UnwoundNode> = Vec::new();
 
-    println!("unwinding: {:?}", &nodes);
+    //println!("unwinding: {:?}", &nodes);
 
     for node in nodes {
         // if node is a block,
         if let Node::Block{ ident, properties, children } = node {
-            println!("evaluating: {}", &ident);
+            //println!("evaluating: {}", &ident);
             // evaluate its children first
             let unwound_children = unwind_children(&children, &fns);
-            println!("eval result 1: {:?}", &unwound_children);
+            //println!("eval result 1: {:?}", &unwound_children);
 
             // evaluate
             let eval_result = evaluate_block(ident, properties, &unwound_children, &fns);
-            println!("eval result 2: {:?}", &eval_result);
+            //println!("eval result 2: {:?}", &eval_result);
 
             // unwound_children.extend(eval_result.iter().cloned());
             unwound_nodes.extend(eval_result.iter().cloned());

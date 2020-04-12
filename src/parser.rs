@@ -7,8 +7,7 @@ use nom::*;
 
 use nom::branch::alt;
 use nom::combinator::{ map, opt, value };
-use nom::character::complete::{ space0, multispace0, multispace1, line_ending, alphanumeric1, one_of, char, digit1 };
-use nom::multi::many1;
+use nom::character::complete::{ space0, multispace0, multispace1, alphanumeric1, one_of, char, digit1 };
 use nom::number::complete::{ double };
 use nom::bytes::complete::tag;
 
@@ -38,8 +37,7 @@ fn _node(i: &str) -> IResult<&str, Node> {
 }
 
 fn anonymous_property(i: &str) -> IResult<&str, Property> {
-    use nom::multi::many1;
-    let params = nom::multi::many0(block_property);
+    // let params = nom::multi::many0(block_property);
 
     let (remainder, (_, property, _)) = nom::sequence::tuple(
         (multispace0, block_property, take_while_newline)
