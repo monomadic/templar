@@ -3,11 +3,11 @@
 
 use crate::*;
 use error::*;
-use nom::*;
 
+use nom::*;
 use nom::branch::alt;
 use nom::combinator::{ map, opt, value };
-use nom::character::complete::{ space0, multispace0, multispace1, alphanumeric1, one_of, char, digit1 };
+use nom::character::complete::{ space0, multispace0, alphanumeric1, one_of, char, digit1 };
 use nom::number::complete::{ double };
 use nom::bytes::complete::tag;
 
@@ -32,7 +32,7 @@ fn _node(i: &str) -> IResult<&str, Node> {
             children: Vec::new(),
         }),
         map(anonymous_property, |p| Node::AnonymousProperty(p)),
-        map(multispace1, |_| Node::WhiteSpace), // remove this
+        //map(multispace1, |_| Node::WhiteSpace), // remove this
     ))(i)
 }
 
