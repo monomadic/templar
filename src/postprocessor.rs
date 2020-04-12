@@ -33,6 +33,8 @@ fn unwind_children(nodes: &Vec<Node>, locals: &HashMap<String, Property>, fns: &
         if let Node::Block{ ident, properties, children } = node {
             // evaluate its children first
             let unwound_children = unwind_children(&children, &locals, &fns);
+
+            // let eval_locals = evaluate_variable_scope(&properties, locals);
             let eval_result = evaluate_block(ident, properties, locals, &unwound_children, fns);
 
             // unwound_children.extend(eval_result.iter().cloned());
@@ -43,10 +45,15 @@ fn unwind_children(nodes: &Vec<Node>, locals: &HashMap<String, Property>, fns: &
     unwound_nodes
 }
 
+// fn evaluate_variable_scope(properties: &Vec<Property>, locals: &HashMap<String, Property>) -> HashMap<String, Property> {
+//     let mut new_locals: HashMap<String, Property> = HashMap::new();
+// }
+
 fn evaluate_block(ident: &String, properties: &Vec<Property>, locals: &HashMap<String, Property>, children: &Vec<UnwoundNode>, fns: &HashMap<String, Function>) -> Vec<UnwoundNode> {
     // if our ident is defined as a function
     if let Some(func) = fns.get(ident) {
         println!("executing fn: {} {:?} {:?} {:?}", ident, func.children, func.arguments, locals);
+        // need to unwind arguments
         return unwind_children(&func.children, &locals, fns);
     }
 
