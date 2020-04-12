@@ -3,15 +3,27 @@ use crate::*;
 use std::collections::HashMap;
 
 /// run pre-processors for a node tree
-pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> { // provide fns also
+pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
     let locals = extract_variables(&nodes);
     let fns = collect_function_definitions(&nodes)?;
+
+    let fns = HashMap::new(); // imported libs
+    let locals = HashMap::new(); // default globals (args?)
 
     unwind_children(&nodes, &locals, &fns)
 }
 
 fn unwind_children(nodes: &Vec<Node>, locals: &HashMap<String, Property>, fns: &HashMap<String, Function>) -> ParseResult<Vec<UnwoundNode>> {
     let mut unwound_nodes: Vec<UnwoundNode> = Vec::new();
+
+    // upsert new local variable scope
+    for (ident, value) in extract_variables(&nodes) {
+        locals.insert(ident, value)?;
+    }
+
+    for (ident, value) in collect_function_definitions(&nodes)? {
+        fns.insert(ident, value)?; // note: check for not None as this would override... allowed for now?
+    }
 
     for node in nodes {
         // if node is a block,
