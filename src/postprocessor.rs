@@ -6,7 +6,6 @@ use std::collections::HashMap;
 pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> { // provide fns also
     let mut fns: HashMap<String, Function> = HashMap::new();
     let locals = extract_variables(&nodes);
-    println!("locals: {:?}", &locals);
 
     // collect all function declarations (only valid at the top level)
     for node in nodes.clone() {
@@ -65,7 +64,7 @@ fn evaluate_block(ident: &String, properties: &Vec<Property>, locals: &HashMap<S
         return unwind_children(&func.children, &args, fns);
     }
 
-    println!("fn not found: {}", ident);
+    // println!("fn not found: {}", ident);
     Ok(vec![UnwoundNode {
         ident: ident.clone(),
         properties: properties.clone(),
