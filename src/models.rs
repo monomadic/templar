@@ -57,7 +57,6 @@ pub struct Argument {
     default: Option<Property>,
 }
 
-
 #[derive(Debug, Clone)]
 pub struct UnwoundNode {
     pub ident: String,

@@ -2,18 +2,16 @@ use crate::ParseResult;
 use crate::*;
 use std::collections::HashMap;
 
-/// run pre-processors for a node tree
+/// run pre-processors for a node tree. use this if you don't want to manually load pre-existing libs
 pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
     let locals = extract_variables(&nodes);
     let fns = collect_function_definitions(&nodes)?;
 
-    // let mut fns = HashMap::new(); // imported libs
-    // let mut locals = HashMap::new(); // default globals (args?)
-
     unwind_children(&nodes, locals, fns)
 }
 
-fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, fns: HashMap<String, Function>) -> ParseResult<Vec<UnwoundNode>> {
+/// hook directly into the unwinding process with this function instead, for providing external libs + globals.
+pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, fns: HashMap<String, Function>) -> ParseResult<Vec<UnwoundNode>> {
     let mut unwound_nodes: Vec<UnwoundNode> = Vec::new();
     let mut locals = locals.clone();
     let mut fns = fns.clone();
@@ -59,7 +57,6 @@ fn evaluate_block(ident: &String, properties: &Vec<Property>, locals: &HashMap<S
     // if our ident is defined as a function
     if let Some(func) = fns.get(ident) {
         let args = merge_arguments(&func.arguments, properties)?;
-        println!("executing fn: {} {:?} {:?} {:?} {:?} {:?}", ident, func.children, func.arguments, locals, properties, args);
         // need to unwind arguments
         return unwind_children(&func.children, args, fns.clone());
     }
@@ -75,7 +72,6 @@ fn evaluate_block(ident: &String, properties: &Vec<Property>, locals: &HashMap<S
 
 fn extract_variables(nodes: &Vec<Node>) -> HashMap<String, Property> {
     let mut variables: HashMap<String, Property> = HashMap::new();
-    println!("extract: {:?}", nodes);
 
     for node in nodes {
         match node.clone() {
