@@ -4,6 +4,9 @@ version = "0.1.1"
 authors = ["Rob Saunders <rob@wearebrandnew.com>", "Michael Shaw <michaeljshaw@gmail.com>"]
 edition = "2018"
 
+[dependencies]
+failure = "*"
+
 [dependencies.nom]
 version = "5.1.1"
 features = ["std"]

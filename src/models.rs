@@ -34,11 +34,7 @@ impl fmt::Display for Property {
 #[derive(Debug, Clone)]
 pub enum Node {
     Comment(String),
-    FunctionDeclaration {
-        ident: String,
-        arguments: Vec<String>,
-        children: Vec<Node>,
-    },
+    FunctionDeclaration(Function),
     Block { // rename to function call?
         ident: String,
         properties: Vec<Property>, // todo: change to arguments
@@ -66,8 +62,16 @@ pub struct UnwoundNode {
     pub children: Vec<UnwoundNode>,
 }
 
+impl UnwoundNode {
+    pub fn get_local(&self, ident: &str) -> Option<Property> {
+        self.locals.get(ident).map(|p|p.clone())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Function {
+    pub ident: String,
+    pub output: String,
     pub arguments: Vec<String>,
     pub children: Vec<Node>,
 }

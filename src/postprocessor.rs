@@ -7,6 +7,7 @@ pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
     let locals = extract_variables(&nodes);
     let fns = collect_function_definitions(&nodes)?;
 
+    println!("locals: {:#?}\nfns:{:?}", locals, fns);
     unwind_children(&nodes, locals, fns)
 }
 
@@ -90,11 +91,8 @@ fn collect_function_definitions(nodes: &Vec<Node>) -> ParseResult<HashMap<String
 
     // collect all function declarations
     for node in nodes {
-        if let Node::FunctionDeclaration { ident, arguments, children } = node {
-            fns.insert(ident.to_string(), Function {
-                arguments: arguments.clone(),
-                children: children.clone()
-            });
+        if let Node::FunctionDeclaration(function) = node {
+            fns.insert(function.ident.to_string(), function.clone());
         };
     }
 

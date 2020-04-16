@@ -7,7 +7,7 @@ use error::*;
 use nom::*;
 use nom::branch::alt;
 use nom::combinator::{ map, opt, value };
-use nom::character::complete::{ space0, multispace0, alphanumeric1, one_of, char, digit1 };
+use nom::character::complete::{ space0, space1, multispace0, alphanumeric1, one_of, char, digit1 };
 use nom::number::complete::{ double };
 use nom::bytes::complete::tag;
 
@@ -74,28 +74,25 @@ fn node(i: &str) -> IResult<&str, Node> {
         }))
     }
 
-    if let Node::FunctionDeclaration{ident, arguments, ..} = n {
-        return Ok((remainder, Node::FunctionDeclaration {
-            ident, arguments, children
-        }))
-    }
-
     // the node must be a property
     Ok((remainder, n))
 }
 
 fn function_declaration(i: &str) -> IResult<&str, Node> {
-    let (input, (_, ident, _, arguments, _)) =
+    let (input, (_, ident, _, output, _, arguments, _)) =
         nom::sequence::tuple(
-            (multispace0, colon_symbol, space0, nom::multi::many0(dotted_symbol), take_while_newline)
+            (multispace0, colon_symbol, space1, symbol, space0, nom::multi::many0(dotted_symbol), take_while_newline)
         )(i)?;
 
     return Ok((input,
-        Node::FunctionDeclaration {
-            ident: ident.into(),
-            arguments: arguments.into_iter().map(|a| a.to_string()).collect(),
-            children: Vec::new(),
-        }
+        Node::FunctionDeclaration(
+            Function {
+                ident: ident.into(),
+                output: output.into(),
+                arguments: arguments.into_iter().map(|a| a.to_string()).collect(),
+                children: Vec::new(),
+            }
+        )
     ))
 }
 

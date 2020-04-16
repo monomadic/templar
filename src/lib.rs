@@ -1,4 +1,4 @@
-// mod error;
+// pub mod error;
 pub mod parser;
 pub mod postprocessor;
 mod models;
