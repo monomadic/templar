@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 /// run pre-processors for a node tree. use this if you don't want to manually load pre-existing libs
 pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
-    let locals = extract_variables(&nodes);
+    let locals = extract_properties(&nodes);
     let overlays = collect_overlay_definitions(&nodes)?;
 
     println!("locals: {:#?}\nfns:{:?}", locals, overlays);
@@ -18,7 +18,7 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
     let mut overlays = overlays.clone();
 
     // upsert new local variable scope
-    for (ident, value) in extract_variables(&nodes) {
+    for (ident, value) in extract_properties(&nodes) {
         locals.insert(ident, value);
     }
 
@@ -36,7 +36,6 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
             let eval_result = unwind(ident, attributes, &locals, &unwound_children, &overlays)?;
 
             // unwound_children.extend(eval_result.iter().cloned());
-            // unwound_nodes.extend(eval_result.iter().cloned());
             unwound_nodes.push(eval_result);
         }
     };
@@ -66,9 +65,19 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
 
     // if our node ident matches any overlays
     if let Some(func) = overlays.get(ident) {
+        println!("FN: {:?}", func);
+
+        // find properties on the function
+        let mut function_properties = extract_properties(&func.children);
+
         unwound_node.ident = func.output.clone();
         // expand overlay arguments into properties
-        unwound_node.properties = merge_arguments(&func.arguments, attributes)?;
+        let argument_properties = merge_arguments(&func.arguments, attributes)?;
+
+        function_properties.extend(argument_properties.clone().into_iter());
+        function_properties.extend(properties.clone().into_iter());
+
+        unwound_node.properties = function_properties;
         // need to unwind children and merge them
         // return unwind_children(&func.children, args, overlays.clone());
     }
@@ -77,7 +86,7 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
     Ok(unwound_node)
 }
 
-fn extract_variables(nodes: &Vec<Node>) -> HashMap<String, Property> {
+fn extract_properties(nodes: &Vec<Node>) -> HashMap<String, Property> {
     let mut variables: HashMap<String, Property> = HashMap::new();
 
     for node in nodes {

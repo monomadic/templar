@@ -74,6 +74,14 @@ fn node(i: &str) -> IResult<&str, Node> {
         }))
     }
 
+    if let Node::Overlay(overlay) = n {
+        return Ok((remainder, Node::Overlay(
+            Overlay {
+                ident: overlay.ident, output: overlay.output, arguments: overlay.arguments, children
+            }
+        ) ))
+    }
+
     // the node must be a property
     Ok((remainder, n))
 }
