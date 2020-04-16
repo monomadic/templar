@@ -25,7 +25,7 @@ fn _node(i: &str) -> IResult<&str, Node> {
     // println!("-- {:?}", i);
     alt((
         map(assignment, |node| node),
-        function_declaration,
+        overlay_declaration,
         map(block, |(_, ident, _, params, _)| Node::Block {
             ident: String::from(ident),
             properties: params,
@@ -78,15 +78,15 @@ fn node(i: &str) -> IResult<&str, Node> {
     Ok((remainder, n))
 }
 
-fn function_declaration(i: &str) -> IResult<&str, Node> {
+fn overlay_declaration(i: &str) -> IResult<&str, Node> {
     let (input, (_, ident, _, output, _, arguments, _)) =
         nom::sequence::tuple(
             (multispace0, colon_symbol, space1, symbol, space0, nom::multi::many0(dotted_symbol), take_while_newline)
         )(i)?;
 
     return Ok((input,
-        Node::FunctionDeclaration(
-            Function {
+        Node::Overlay(
+            Overlay {
                 ident: ident.into(),
                 output: output.into(),
                 arguments: arguments.into_iter().map(|a| a.to_string()).collect(),
@@ -140,7 +140,7 @@ fn dotted_symbol(i: &str) -> IResult<&str, &str> {
     trim_pre_whitespace(nom::sequence::preceded(char('.'), symbolic1))(i)
 }
 
-// matches function declaration eg :blah
+// matches overlay declaration eg :blah
 fn colon_symbol(i: &str) -> IResult<&str, &str> {
     trim_pre_whitespace(nom::sequence::preceded(char(':'), symbolic1))(i)
 }

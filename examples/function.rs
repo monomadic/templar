@@ -1,12 +1,12 @@
 use templar;
 
 const CODE: &str = r#"
-print "this is a direct function call."
+print "this is a direct block."
 
-say "now I am calling a function I will define."
+say "now I am using an overlay."
 
 :say print .text
-    .append "this property is appended to the callee"
+    .append "this property is also appended to the callee"
 
 "#;
 
