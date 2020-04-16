@@ -28,12 +28,12 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
 
     for node in nodes {
         // if node is a block,
-        if let Node::Block{ ident, properties, children } = node {
+        if let Node::Block{ ident, attributes, children } = node {
             // evaluate its children first
             let unwound_children = unwind_children(&children, locals.clone(), overlays.clone())?;
 
             // let eval_locals = evaluate_variable_scope(&properties, locals);
-            let eval_result = unwind(ident, properties, &locals, &unwound_children, &overlays)?;
+            let eval_result = unwind(ident, attributes, &locals, &unwound_children, &overlays)?;
 
             // unwound_children.extend(eval_result.iter().cloned());
             // unwound_nodes.extend(eval_result.iter().cloned());

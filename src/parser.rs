@@ -28,7 +28,7 @@ fn _node(i: &str) -> IResult<&str, Node> {
         overlay_declaration,
         map(block, |(_, ident, _, params, _)| Node::Block {
             ident: String::from(ident),
-            properties: params,
+            attributes: params,
             children: Vec::new(),
         }),
         map(anonymous_property, |p| Node::AnonymousProperty(p)),
@@ -68,9 +68,9 @@ fn node(i: &str) -> IResult<&str, Node> {
 
     // if the current node is a block, return it
     // ( children are not picked up in the first pass )
-    if let Node::Block{ident, properties, ..} = n {
+    if let Node::Block{ident, attributes, ..} = n {
         return Ok((remainder, Node::Block {
-            ident, properties, children
+            ident, attributes, children
         }))
     }
 

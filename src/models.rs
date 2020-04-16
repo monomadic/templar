@@ -1,13 +1,6 @@
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub struct Block {
-    ident: String,
-    properties: Vec<Property>,
-    nodes: Vec<Node>,
-}
-
-#[derive(Debug, Clone)]
 pub enum Property {
     Boolean(bool),
     DottedSymbol(String),
@@ -37,7 +30,7 @@ pub enum Node {
     Overlay(Overlay),
     Block { // todo: change to Block(Block)
         ident: String,
-        properties: Vec<Property>, // todo: change to arguments
+        attributes: Vec<Property>, // todo: change to arguments
         children: Vec<Node>,
     },
     Assignment { // rename to PropertyAssignment
@@ -45,6 +38,15 @@ pub enum Node {
         value: Property, // this will end up being its own vec of enums
     },
     AnonymousProperty(Property),
+}
+
+#[derive(Debug, Clone)]
+pub struct Block {
+    pub ident: String,
+    // description: Option<String>,
+    pub attributes: Vec<Property>,
+    pub locals: HashMap<String, Property>, // todo: change locals to properties
+    pub children: Vec<Node>,
 }
 
 pub struct Argument {
