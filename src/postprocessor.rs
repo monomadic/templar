@@ -33,10 +33,11 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, fns
             let unwound_children = unwind_children(&children, locals.clone(), fns.clone())?;
 
             // let eval_locals = evaluate_variable_scope(&properties, locals);
-            let eval_result = evaluate_block(ident, properties, &locals, &unwound_children, &fns)?;
+            let eval_result = unwind(ident, properties, &locals, &unwound_children, &fns)?;
 
             // unwound_children.extend(eval_result.iter().cloned());
-            unwound_nodes.extend(eval_result.iter().cloned());
+            // unwound_nodes.extend(eval_result.iter().cloned());
+            unwound_nodes.push(eval_result);
         }
     };
 
@@ -54,21 +55,27 @@ fn merge_arguments(args: &Vec<String>, properties: &Vec<Property>) -> ParseResul
     Ok(passed_arguments)
 }
 
-fn evaluate_block(ident: &String, properties: &Vec<Property>, locals: &HashMap<String, Property>, children: &Vec<UnwoundNode>, fns: &HashMap<String, Function>) -> ParseResult<Vec<UnwoundNode>> {
-    // if our ident is defined as a function
-    if let Some(func) = fns.get(ident) {
-        let args = merge_arguments(&func.arguments, properties)?;
-        // need to unwind arguments
-        return unwind_children(&func.children, args, fns.clone());
-    }
-
-    // println!("fn not found: {}", ident);
-    Ok(vec![UnwoundNode {
+fn unwind(ident: &String, properties: &Vec<Property>, locals: &HashMap<String, Property>, children: &Vec<UnwoundNode>, fns: &HashMap<String, Function>)
+-> ParseResult<UnwoundNode> {
+    let mut unwound_node = UnwoundNode {
         ident: ident.clone(),
         properties: properties.clone(),
         locals: locals.clone(),
         children: children.clone()
-    }])
+    };
+
+    // if our node ident matches any overlays
+    if let Some(func) = fns.get(ident) {
+        unwound_node.ident = func.output.clone();
+        // expand overlay arguments into properties
+        // todo: change locals to properties
+        unwound_node.locals = merge_arguments(&func.arguments, properties)?;
+        // need to unwind children and merge them
+        // return unwind_children(&func.children, args, fns.clone());
+    }
+
+    // println!("fn not found: {}", ident);
+    Ok(unwound_node)
 }
 
 fn extract_variables(nodes: &Vec<Node>) -> HashMap<String, Property> {

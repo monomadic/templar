@@ -5,8 +5,8 @@ print "this is a direct function call."
 
 say "now I am calling a function I will define."
 
-:say .text
-    print .text
+:say print .text
+    .append "this property is appended to the callee"
 
 "#;
 

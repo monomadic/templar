@@ -35,7 +35,7 @@ impl fmt::Display for Property {
 pub enum Node {
     Comment(String),
     FunctionDeclaration(Function),
-    Block { // rename to function call?
+    Block { // todo: change to Block(Block)
         ident: String,
         properties: Vec<Property>, // todo: change to arguments
         children: Vec<Node>,
@@ -53,6 +53,7 @@ pub struct Argument {
     default: Option<Property>,
 }
 
+// todo: wrap up into Block
 #[derive(Debug, Clone)]
 pub struct UnwoundNode {
     pub ident: String,
@@ -68,6 +69,7 @@ impl UnwoundNode {
     }
 }
 
+// todo: rename to overlay
 #[derive(Debug, Clone)]
 pub struct Function {
     pub ident: String,
