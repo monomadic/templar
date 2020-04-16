@@ -61,13 +61,13 @@ pub struct UnwoundNode {
     pub ident: String,
     // description: Option<String>,
     pub attributes: Vec<Property>, // todo: remove this, they should be wound into properties.
-    pub locals: HashMap<String, Property>,
+    pub properties: HashMap<String, Property>,
     pub children: Vec<UnwoundNode>,
 }
 
 impl UnwoundNode {
     pub fn get_local(&self, ident: &str) -> Option<Property> {
-        self.locals.get(ident).map(|p|p.clone())
+        self.properties.get(ident).map(|p|p.clone())
     }
 }
 

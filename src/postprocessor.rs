@@ -55,12 +55,12 @@ fn merge_arguments(args: &Vec<String>, properties: &Vec<Property>) -> ParseResul
     Ok(passed_arguments)
 }
 
-fn unwind(ident: &String, properties: &Vec<Property>, locals: &HashMap<String, Property>, children: &Vec<UnwoundNode>, overlays: &HashMap<String, Overlay>)
+fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<String, Property>, children: &Vec<UnwoundNode>, overlays: &HashMap<String, Overlay>)
 -> ParseResult<UnwoundNode> {
     let mut unwound_node = UnwoundNode {
         ident: ident.clone(),
-        attributes: properties.clone(),
-        locals: locals.clone(),
+        attributes: attributes.clone(),
+        properties: properties.clone(),
         children: children.clone()
     };
 
@@ -68,8 +68,7 @@ fn unwind(ident: &String, properties: &Vec<Property>, locals: &HashMap<String, P
     if let Some(func) = overlays.get(ident) {
         unwound_node.ident = func.output.clone();
         // expand overlay arguments into properties
-        // todo: change locals to properties
-        unwound_node.locals = merge_arguments(&func.arguments, properties)?;
+        unwound_node.properties = merge_arguments(&func.arguments, attributes)?;
         // need to unwind children and merge them
         // return unwind_children(&func.children, args, overlays.clone());
     }
