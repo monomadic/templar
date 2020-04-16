@@ -59,7 +59,7 @@ fn unwind(ident: &String, properties: &Vec<Property>, locals: &HashMap<String, P
 -> ParseResult<UnwoundNode> {
     let mut unwound_node = UnwoundNode {
         ident: ident.clone(),
-        properties: properties.clone(),
+        attributes: properties.clone(),
         locals: locals.clone(),
         children: children.clone()
     };

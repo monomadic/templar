@@ -30,14 +30,14 @@ pub enum Node {
     Overlay(Overlay),
     Block { // todo: change to Block(Block)
         ident: String,
-        attributes: Vec<Property>, // todo: change to arguments
+        attributes: Vec<Property>,
         children: Vec<Node>,
     },
-    Assignment { // rename to PropertyAssignment
+    Assignment { // rename to Property
         ident: String,
         value: Property, // this will end up being its own vec of enums
     },
-    AnonymousProperty(Property),
+    AnonymousProperty(Property), // is this valid?
 }
 
 #[derive(Debug, Clone)]
@@ -45,7 +45,7 @@ pub struct Block {
     pub ident: String,
     // description: Option<String>,
     pub attributes: Vec<Property>,
-    pub locals: HashMap<String, Property>, // todo: change locals to properties
+    pub properties: HashMap<String, Property>,
     pub children: Vec<Node>,
 }
 
@@ -60,7 +60,7 @@ pub struct Argument {
 pub struct UnwoundNode {
     pub ident: String,
     // description: Option<String>,
-    pub properties: Vec<Property>,
+    pub attributes: Vec<Property>, // todo: remove this, they should be wound into properties.
     pub locals: HashMap<String, Property>,
     pub children: Vec<UnwoundNode>,
 }
