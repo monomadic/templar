@@ -7,9 +7,11 @@ use error::*;
 use nom::*;
 use nom::branch::alt;
 use nom::combinator::{ map, opt, value };
-use nom::character::complete::{ space0, space1, multispace0, alphanumeric1, one_of, char, digit1 };
+use nom::character::complete::{ space0, space1, multispace0, multispace1, alphanumeric1, one_of, char, digit1 };
 use nom::number::complete::{ double };
-use nom::bytes::complete::tag;
+use nom::bytes::complete::{ tag, is_not };
+use nom::sequence::preceded;
+use nom::sequence::delimited;
 
 /// returns the position of the first non-whitespace character, or None if the line is entirely whitespace.
 fn indentation_level(i: &str) -> IResult<&str, usize> {
@@ -166,12 +168,27 @@ fn block_property(i: &str) -> IResult<&str, Property> {
         // map(hash, JsonValue::Object),
         // map(array, JsonValue::Array),
         map(quoted_string,  |s| Property::QuotedString(String::from(s))),
+        map(argument_idx,   |i| Property::ArgumentIndex(i.parse::<usize>().unwrap())),
         map(double,         |f| Property::Float(f)),
         map(digit1,         |i:&str| Property::Number(i.parse::<i64>().unwrap_or(0))),
         map(boolean,        |b| Property::Boolean(b)),
         map(dotted_symbol,  |s| Property::DottedSymbol(String::from(s))),
         map(symbol,         |s| Property::Symbol(String::from(s))),
     ))(i)
+}
+
+fn argument_idx(i: &str) -> IResult<&str, &str> {
+    trim_pre_whitespace(preceded(char('$'), digit1))(i)
+}
+
+fn _argument_idx(i: &str) -> IResult<&str, usize> {
+    let (input, (_, _, index, _)) = nom::sequence::tuple(
+        (multispace0, char('$'), digit1, take_while_newline)
+    )(i)?;
+
+    let index = index.parse::<usize>().unwrap(); // todo: fix this unwrap with an error
+
+    Ok((input, index))
 }
 
 /// match an alphanumeric word (symbol) with optional preceding space
@@ -182,15 +199,11 @@ fn symbol(i: &str) -> IResult<&str, &str> {
 fn trim_pre_whitespace<'a, O1, F>(inner: F) -> impl Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>
 where F: Fn(&'a str) -> IResult<&'a str, O1, (&str, nom::error::ErrorKind)>,
 {
-    use nom::sequence::preceded;
 
     preceded(opt(one_of(" \t\n\r")), inner)
 }
 
 fn quoted_string(i: &str) -> IResult<&str, &str> {
-    use nom::bytes::complete::is_not;
-    use nom::sequence::delimited;
-
     trim_pre_whitespace(delimited(
         char('\"'), is_not("\""), char('\"')
     ))(i)

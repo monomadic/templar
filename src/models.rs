@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub enum Property {
+    ArgumentIndex(usize),
     Boolean(bool),
     DottedSymbol(String),
     Float(f64),
@@ -14,6 +15,7 @@ use std::fmt;
 impl fmt::Display for Property {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Property::ArgumentIndex (n) => write!(f, "{}", n),
             Property::Boolean(b)        => { if b == &true { write!(f, "true") } else { write!(f, "false") }},
             Property::DottedSymbol(s)   => write!(f, "{}", s),
             Property::Float(n)          => write!(f, "{}", n),
