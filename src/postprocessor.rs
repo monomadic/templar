@@ -92,6 +92,10 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
         unwound_node.properties = function_properties;
         // need to unwind children and merge them
         // return unwind_children(&func.children, args, overlays.clone());
+
+        for child in unwind_children(&func.children, unwound_node.properties.clone(), overlays.clone())? {
+            unwound_node.children.push(child);
+        }
     }
 
     // println!("fn not found: {}", ident);
