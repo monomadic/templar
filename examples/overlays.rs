@@ -13,11 +13,12 @@ say "now I am using an overlay."
 const HTML: &str = r#"
 page "index.html"
     h1 "hello"
+    "blah blah lahhdhhd"
 
 :h1 tag
-    .text $0
     .background red
     .type "h1"
+    "blah blah blah"
 "#;
 
 fn main() {
@@ -25,6 +26,5 @@ fn main() {
     let post = templar::postprocessor::run(result).unwrap();
 
     println!("{:#?}", post);
-
     println!("output: {}", output);
 }

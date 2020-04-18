@@ -7,7 +7,7 @@ pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
     let locals = extract_properties(&nodes);
     let overlays = collect_overlay_definitions(&nodes)?;
 
-    println!("locals: {:#?}\nfns:{:?}", locals, overlays);
+    println!("locals: {:#?}\noverlays: {}", locals, overlays.clone().into_iter().map(|(k,v)| k).collect::<Vec<String>>().join(", "));
     unwind_children(&nodes, locals, overlays)
 }
 
@@ -37,6 +37,18 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
 
             // unwound_children.extend(eval_result.iter().cloned());
             unwound_nodes.push(eval_result);
+        };
+
+        // anonymous values get converted into nodes of ident _TEXT with a property .text <eval>
+        if let Node::AnonymousProperty(value) = node {
+            let mut properties: HashMap<String, Property> = HashMap::new();
+            properties.insert(".text".into(), value.clone());
+            unwound_nodes.push(UnwoundNode {
+                ident: "_TEXT".into(),
+                attributes: vec![],
+                properties,
+                children: vec![],
+            })
         }
     };
 

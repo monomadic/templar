@@ -24,7 +24,7 @@ pub fn run(i:&str) -> IResult<&str, Vec<Node>> {
 }
 
 fn _node(i: &str) -> IResult<&str, Node> {
-    // println!("-- {:?}", i);
+    println!("-- {:?}", i);
     alt((
         map(assignment, |node| node),
         overlay_declaration,
@@ -91,8 +91,10 @@ fn node(i: &str) -> IResult<&str, Node> {
 fn overlay_declaration(i: &str) -> IResult<&str, Node> {
     let (input, (_, ident, _, output, _, arguments, _)) =
         nom::sequence::tuple(
-            (multispace0, colon_symbol, space1, symbol, space0, nom::multi::many0(dotted_symbol), take_while_newline)
+            (multispace0, colon_symbol, space1, symbol, space0, nom::multi::many0(symbol), take_while_newline)
         )(i)?;
+
+    println!("input: {:?}", input);
 
     return Ok((input,
         Node::Overlay(
