@@ -2,7 +2,7 @@
 // https://github.com/benkay86/nom-tutorial
 
 use crate::*;
-use error::*;
+use crate::error::*;
 
 use nom::*;
 use nom::branch::alt;
@@ -12,6 +12,7 @@ use nom::number::complete::{ double };
 use nom::bytes::complete::{ tag, is_not };
 use nom::sequence::preceded;
 use nom::sequence::delimited;
+use nom::error::*;
 
 /// returns the position of the first non-whitespace character, or None if the line is entirely whitespace.
 fn indentation_level(i: &str) -> IResult<&str, usize> {
@@ -209,4 +210,16 @@ fn quoted_string(i: &str) -> IResult<&str, &str> {
     trim_pre_whitespace(delimited(
         char('\"'), is_not("\""), char('\"')
     ))(i)
+}
+
+#[test]
+fn check_quoted_string() {
+    let res = quoted_string("\"hi\"");
+    assert_eq!(res, Ok(("", "hi")));
+
+    let res = quoted_string("\"hi\" \n");
+    assert_eq!(res, Ok((" \n", "hi")));
+
+    let res = quoted_string("hi");
+    assert!(res.is_err());
 }

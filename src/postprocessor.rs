@@ -3,7 +3,7 @@ use crate::*;
 use std::collections::HashMap;
 
 /// run pre-processors for a node tree. use this if you don't want to manually load pre-existing libs
-pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
+pub fn run(nodes: Vec<Node>) -> TemplarResult<Vec<UnwoundNode>> {
     let locals = extract_properties(&nodes);
     let overlays = collect_overlay_definitions(&nodes)?;
 
@@ -12,7 +12,7 @@ pub fn run(nodes: Vec<Node>) -> ParseResult<Vec<UnwoundNode>> {
 }
 
 /// hook directly into the unwinding process with this overlay instead, for providing external libs + globals.
-pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, overlays: HashMap<String, Overlay>) -> ParseResult<Vec<UnwoundNode>> {
+pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, overlays: HashMap<String, Overlay>) -> TemplarResult<Vec<UnwoundNode>> {
     let mut unwound_nodes: Vec<UnwoundNode> = Vec::new();
     let mut locals = locals.clone();
     let mut overlays = overlays.clone();
@@ -42,7 +42,7 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
         // anonymous values get converted into nodes of ident _TEXT with a property .text <eval>
         if let Node::AnonymousProperty(value) = node {
             let mut properties: HashMap<String, Property> = HashMap::new();
-            properties.insert(".text".into(), value.clone());
+            properties.insert("text".into(), value.clone());
             unwound_nodes.push(UnwoundNode {
                 ident: "_TEXT".into(),
                 attributes: vec![],
@@ -55,7 +55,7 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
     Ok(unwound_nodes)
 }
 
-fn merge_arguments(args: &Vec<String>, properties: &Vec<Property>) -> ParseResult<HashMap<String, Property>> {
+fn merge_arguments(args: &Vec<String>, properties: &Vec<Property>) -> TemplarResult<HashMap<String, Property>> {
     let mut passed_arguments: HashMap<String, Property> = HashMap::new();
 
     for (index, arg) in args.into_iter().enumerate() {
@@ -67,7 +67,7 @@ fn merge_arguments(args: &Vec<String>, properties: &Vec<Property>) -> ParseResul
 }
 
 fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<String, Property>, children: &Vec<UnwoundNode>, overlays: &HashMap<String, Overlay>)
--> ParseResult<UnwoundNode> {
+-> TemplarResult<UnwoundNode> {
     let mut unwound_node = UnwoundNode {
         ident: ident.clone(),
         attributes: attributes.clone(),
@@ -117,7 +117,7 @@ fn extract_properties(nodes: &Vec<Node>) -> HashMap<String, Property> {
     return variables;
 }
 
-fn collect_overlay_definitions(nodes: &Vec<Node>) -> ParseResult<HashMap<String, Overlay>> {
+fn collect_overlay_definitions(nodes: &Vec<Node>) -> TemplarResult<HashMap<String, Overlay>> {
     let mut overlays: HashMap<String, Overlay> = HashMap::new();
 
     // collect all overlay declarations
