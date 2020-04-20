@@ -13,8 +13,7 @@ style a "b" another
 "#;
 
 fn main() {
-    let (input, result) = templar::parser::run(CODE).unwrap();
-    let post = templar::postprocessor::run(result).unwrap();
+    let result = templar::parse_str(CODE).unwrap();
 
-    println!("{:#?}", post);
+    println!("{:#?}", result);
 }
