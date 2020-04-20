@@ -51,11 +51,11 @@ pub struct Block {
     pub children: Vec<Node>,
 }
 
-pub struct Argument {
-    ident: String,
-    // type: 
-    default: Option<Property>,
-}
+// pub struct Argument {
+//     ident: String,
+//     // type: 
+//     default: Option<Property>,
+// }
 
 // todo: wrap up into Block
 #[derive(Debug, Clone)]

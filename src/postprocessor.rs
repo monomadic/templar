@@ -6,7 +6,7 @@ pub fn run(nodes: Vec<Node>) -> TemplarResult<Vec<UnwoundNode>> {
     let locals = extract_properties(&nodes);
     let overlays = collect_overlay_definitions(&nodes)?;
 
-    println!("locals: {:#?}\noverlays: {}", locals, overlays.clone().into_iter().map(|(k,v)| k).collect::<Vec<String>>().join(", "));
+    // println!("locals: {:#?}\noverlays: {}", locals, overlays.clone().into_iter().map(|(k,v)| k).collect::<Vec<String>>().join(", "));
     unwind_children(&nodes, locals, overlays)
 }
 
