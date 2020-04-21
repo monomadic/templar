@@ -88,6 +88,40 @@ fn node(i: &str) -> IResult<&str, Node> {
     Ok((remainder, n))
 }
 
+#[test]
+fn check_node_solo() {
+    // no children
+    let (r, node) = node("tag").unwrap();
+    assert_eq!(r, "");
+
+    if let Node::Block{ ident, children, .. } = node {
+        assert_eq!(ident, String::from("tag"));
+        assert_eq!(children.len(), 0);
+    } else {
+        panic!("node is not a block!");
+    }
+}
+
+#[test]
+fn check_node_children() {
+    let (r, node) = node("tag\n\t.type \"h1\"").unwrap();
+    assert_eq!(r, "");
+
+    if let Node::Block{ ident, children, .. } = node {
+        assert_eq!(ident, String::from("tag"));
+        assert_eq!(children.len(), 1);
+        let child = children.first().unwrap();
+        if let Node::Assignment{ ident, value } = child {
+            assert_eq!(ident, &String::from("type"));
+            assert_eq!(value, &Property::QuotedString(String::from("h1")));
+        } else {
+            panic!("node has no children!");
+        }
+    } else {
+        panic!("node is not a block!");
+    }
+}
+
 fn overlay_declaration(i: &str) -> IResult<&str, Node> {
     let (input, (_, ident, _, output, _, arguments, _)) =
         nom::sequence::tuple(

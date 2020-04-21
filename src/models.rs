@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Property {
-    ArgumentIndex(usize),
+    ArgumentIndex(usize), // rename to argument reference
     Boolean(bool),
     DottedSymbol(String),
     Float(f64),
@@ -30,7 +30,7 @@ impl fmt::Display for Property {
 pub enum Node {
     Comment(String),
     Overlay(Overlay),
-    Block { // todo: change to Block(Block)
+    Block {
         ident: String,
         attributes: Vec<Property>,
         children: Vec<Node>,
