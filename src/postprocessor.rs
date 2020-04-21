@@ -85,75 +85,131 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
     if let Some(func) = overlays.get(ident) {
         println!("applying overlay: {:?}", func);
 
-        // find properties on the function
-        let mut function_properties = extract_properties(&func.children);
+        // find properties on the overlay
+        let mut overlay_properties = extract_properties(&func.children);
+
+        let original_children = unwound_node.children;
+
+        unwound_node.children = Vec::new();
 
         // now we need to traverse the overlay with a preprocessor that
-        // resolves references with arguments eg $1 $2
-        let resolved_overlay_children =
-            func.children.iter().map(|child| {
-                resolve_variable_references_in_overlay(attributes, child)
-            }).collect();
+        // resolves references to $0
+        // unwound_node.children =
+        //     func.children.iter().map(|child| {
+        //         resolve_content_references_in_overlay(attributes, child)
+        //     }).collect();
 
         // replace ident
         unwound_node.ident = func.output.clone();
         // expand overlay arguments into properties NOT NECESSARY
 
         // add properties from inside the overlay
-        function_properties.extend(properties.clone().into_iter());
+        overlay_properties.extend(properties.clone().into_iter());
 
-        unwound_node.properties = function_properties;
+        unwound_node.properties = overlay_properties;
         // need to unwind children and merge them
 
-        for child in unwind_children(&resolved_overlay_children, unwound_node.properties.clone(), overlays.clone())? {
-            unwound_node.children.push(child);
+        for child in unwind_children(&func.children, unwound_node.properties.clone(), overlays.clone())? {
+            println!("NODE: {:?}", child);
+            let mut newchild = child.clone();
+
+            newchild.properties = resolve_references_in_properties(&child.properties, attributes);
+
+            unwound_node.children.push(newchild);
         }
+
+        unwound_node.children = insert_content_in_overlay(&unwound_node.children, &original_children);
     }
 
     // println!("fn not found: {}", ident);
     Ok(unwound_node)
 }
 
-// fn resolve_variable_references_in_overlay(arguments: &Vec<Property>, nodes: &Vec<Node>) -> Vec<Node> {
-//     let nodes = nodes.iter().map(resolve_references).collect();
+fn insert_content_in_overlay(children: &Vec<UnwoundNode>, content: &Vec<UnwoundNode>) -> Vec<UnwoundNode> {
+    let mut resolved_children: Vec<UnwoundNode> = Vec::new();
+
+    for child in children {
+        if let Some(text_property) = child.properties.get("text") {
+            if let Property::ArgumentIndex(index) = text_property {
+                if *index == 0 {
+                    resolved_children = [resolved_children.clone(), content.clone()].concat();
+                    break;
+                }
+            }
+        }
+
+        resolved_children.push(child.clone());
+    };
+
+    resolved_children
+}
+
+fn resolve_references_in_properties(properties: &HashMap<String, Property>, arguments: &Vec<Property>) -> HashMap<String, Property> {
+    properties.iter().map(|(k, v)| {
+        if let Property::ArgumentIndex(index) = v {
+            // temporary fix for 0 indexes
+            if *index == 0 {
+                return (k.clone(), v.clone());
+            }
+            // end temporary fix
+            if let Some(property) = arguments.get(index - 1) {
+                return (k.clone(), property.clone());
+            }
+        }
+        (k.clone(), v.clone())
+    }).collect()
+}
+
+// fn resolve_content_references_in_overlay(nodes: &Vec<Node>, content: &Vec<Node>) -> Vec<Node> {
+
+// }
+
+// // resolves $0 content references and $1 argument references
+// fn resolve_references_in_anonymous_properties(nodes: &Vec<Node>, arguments: &Vec<Property>, children: &Vec<Node>) -> Vec<Node> {
+//     let mut resolved_nodes: Vec<Node> = Vec::new();
+
 //     for node in nodes {
 //         if let Node::AnonymousProperty(property) = node {
 //             if let Property::ArgumentIndex(index) = property {
-//                 //println!("-INDEX FOUND: {:?} {:?}", index, arguments.get(index - 1));
-//                 //let a = arguments.get(index - 1);
-//                 if let Some(property) = arguments.get(index - 1) {
-//                     return Node::AnonymousProperty(property);
+//                 if index == 0 {
+//                     resolved_nodes.push(children);
+//                 } else {
+//                     // args $1 - $9
+//                     if let Some(property) = arguments.get(index - 1) {
+//                         resolved_nodes.push(&Node::AnonymousProperty(property.clone()));
+//                     }
 //                 }
 //             }
 //         }
-//     }
-//     nodes.clone()
+//     };
+
+//     resolved_nodes
 // }
 
-fn resolve_variable_references_in_overlay(arguments: &Vec<Property>, node: &Node) -> Node {
+// fn resolve_variable_references_in_overlay(arguments: &Vec<Property>, node: &Node) -> Node {
 
-    // match node {
-    //     Node::Block{ children, .. } => {},
+//     // match node {
+//     //     Node::Block{ children, .. } => {},
 
-    // }
+//     // }
 
-    // children first
-    // output_node.children = node.children.into_iter().map(resolve_variable_references_in_overlay(
-    //     arguments: &arguments, node: &node
-    // ));
+//     // children first
+//     // output_node.children = node.children.into_iter().map(resolve_variable_references_in_overlay(
+//     //     arguments: &arguments, node: &node
+//     // ));
 
-    // resolve now
-    if let Node::AnonymousProperty(property) = node {
-        if let Property::ArgumentIndex(index) = property {
-            if let Some(property) = arguments.get(index - 1) {
-                return Node::AnonymousProperty(property.clone());
-            }
-        }
-    }
+//     // resolve now
+//     if let Node::AnonymousProperty(property) = node {
+//         if let Property::ArgumentIndex(index) = property {
+//             if let Some(property) = arguments.get(index - 1) {
+//                 return Node::AnonymousProperty(property.clone());
+//             }
+//         }
+//     }
 
-    // else leaf node, return it.
-    node.clone()
-}
+//     // else leaf node, return it.
+//     node.clone()
+// }
 
 
 
