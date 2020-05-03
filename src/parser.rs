@@ -24,7 +24,6 @@ pub fn run(i:&str) -> IResult<&str, Vec<Node>> {
 }
 
 fn _node(i: &str) -> IResult<&str, Node> {
-    println!("-- {:?}", i);
     alt((
         map(assignment, |node| node),
         overlay_declaration,
@@ -61,7 +60,6 @@ fn node(i: &str) -> IResult<&str, Node> {
         // take a node
         let (r, child) = node(remainder)?;
         remainder = r;
-        // println!("child found: {:?}", &child);
         children.push(child);
 
         let (_, next_line) = indentation_level(r)?;
@@ -127,8 +125,6 @@ fn overlay_declaration(i: &str) -> IResult<&str, Node> {
         nom::sequence::tuple(
             (multispace0, colon_symbol, space1, symbol, space0, nom::multi::many0(symbol), take_while_newline)
         )(i)?;
-
-    println!("input: {:?}", input);
 
     return Ok((input,
         Node::Overlay(

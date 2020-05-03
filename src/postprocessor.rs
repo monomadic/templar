@@ -25,14 +25,12 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
     }
 
     for node in nodes {
-        println!("UNWINDING: {:?}", node);
         // if node is a block,
         if let Node::Block{ ident, attributes, children } = node {
             // evaluate its children first
             let unwound_children = unwind_children(&children, locals.clone(), overlays.clone())?;
 
             let properties = extract_properties(&children);
-            println!("PROPS: {:?}{:?}", properties, attributes);
 
             // let eval_locals = evaluate_variable_scope(&properties, locals);
             let eval_result = unwind(ident, attributes, &properties, &unwound_children, &overlays)?;
@@ -54,21 +52,8 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
         }
     };
 
-    println!("UNWOUND: {:?}", unwound_nodes);
-
     Ok(unwound_nodes)
 }
-
-// fn merge_arguments(args: &Vec<String>, properties: &Vec<Property>) -> TemplarResult<HashMap<String, Property>> {
-//     let mut passed_arguments: HashMap<String, Property> = HashMap::new();
-
-//     for (index, arg) in args.into_iter().enumerate() {
-//         let property: Property = properties.get(index).unwrap_or(&Property::QuotedString("ERROR".into())).clone();
-//         passed_arguments.insert(arg.clone(), property); // todo: fix
-//     }
-
-//     Ok(passed_arguments)
-// }
 
 fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<String, Property>, children: &Vec<UnwoundNode>, overlays: &HashMap<String, Overlay>)
 -> TemplarResult<UnwoundNode> {
@@ -79,11 +64,8 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
         children: children.clone()
     };
 
-    println!("CURRENT UNWOUND NODE: {:?}", unwound_node);
-
     // if our node ident matches any overlays
     if let Some(func) = overlays.get(ident) {
-        println!("applying overlay: {:?}", func);
 
         // find properties on the overlay
         let mut overlay_properties = extract_properties(&func.children);
@@ -110,7 +92,6 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
         // need to unwind children and merge them
 
         for child in unwind_children(&func.children, unwound_node.properties.clone(), overlays.clone())? {
-            println!("NODE: {:?}", child);
             let mut newchild = child.clone();
 
             newchild.properties = resolve_references_in_properties(&child.properties, attributes);
@@ -121,7 +102,6 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
         unwound_node.children = insert_content_in_overlay(&unwound_node.children, &original_children);
     }
 
-    // println!("fn not found: {}", ident);
     Ok(unwound_node)
 }
 
@@ -159,58 +139,6 @@ fn resolve_references_in_properties(properties: &HashMap<String, Property>, argu
         (k.clone(), v.clone())
     }).collect()
 }
-
-// fn resolve_content_references_in_overlay(nodes: &Vec<Node>, content: &Vec<Node>) -> Vec<Node> {
-
-// }
-
-// // resolves $0 content references and $1 argument references
-// fn resolve_references_in_anonymous_properties(nodes: &Vec<Node>, arguments: &Vec<Property>, children: &Vec<Node>) -> Vec<Node> {
-//     let mut resolved_nodes: Vec<Node> = Vec::new();
-
-//     for node in nodes {
-//         if let Node::AnonymousProperty(property) = node {
-//             if let Property::ArgumentIndex(index) = property {
-//                 if index == 0 {
-//                     resolved_nodes.push(children);
-//                 } else {
-//                     // args $1 - $9
-//                     if let Some(property) = arguments.get(index - 1) {
-//                         resolved_nodes.push(&Node::AnonymousProperty(property.clone()));
-//                     }
-//                 }
-//             }
-//         }
-//     };
-
-//     resolved_nodes
-// }
-
-// fn resolve_variable_references_in_overlay(arguments: &Vec<Property>, node: &Node) -> Node {
-
-//     // match node {
-//     //     Node::Block{ children, .. } => {},
-
-//     // }
-
-//     // children first
-//     // output_node.children = node.children.into_iter().map(resolve_variable_references_in_overlay(
-//     //     arguments: &arguments, node: &node
-//     // ));
-
-//     // resolve now
-//     if let Node::AnonymousProperty(property) = node {
-//         if let Property::ArgumentIndex(index) = property {
-//             if let Some(property) = arguments.get(index - 1) {
-//                 return Node::AnonymousProperty(property.clone());
-//             }
-//         }
-//     }
-
-//     // else leaf node, return it.
-//     node.clone()
-// }
-
 
 
 fn extract_properties(nodes: &Vec<Node>) -> HashMap<String, Property> {
