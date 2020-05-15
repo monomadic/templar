@@ -45,7 +45,8 @@ pub fn unwind_children(nodes: &Vec<Node>, locals: HashMap<String, Property>, ove
             properties.insert("text".into(), value.clone());
             unwound_nodes.push(UnwoundNode {
                 ident: "_TEXT".into(),
-                attributes: vec![],
+                // attributes: vec![],
+                arguments: HashMap::new(),
                 properties,
                 children: vec![],
             })
@@ -59,7 +60,8 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
 -> TemplarResult<UnwoundNode> {
     let mut unwound_node = UnwoundNode {
         ident: ident.clone(),
-        attributes: attributes.clone(),
+        // attributes: attributes.clone(),
+        arguments: HashMap::new(),
         properties: properties.clone(),
         children: children.clone()
     };
@@ -91,6 +93,7 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
 
         for (index, arg) in func.arguments.iter().enumerate() {
             println!("{}: {:?} {:?}", &index, &arg, attributes[index]);
+            unwound_node.arguments.insert(arg.clone(), attributes[index].clone());
         }
 
         for child in unwind_children(&func.children, unwound_node.properties.clone(), overlays.clone())? {

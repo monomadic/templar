@@ -51,18 +51,13 @@ pub struct Block {
     pub children: Vec<Node>,
 }
 
-// pub struct Argument {
-//     ident: String,
-//     // type: 
-//     default: Option<Property>,
-// }
-
-// todo: wrap up into Block
+// todo: change to Node (once Node is Token)
 #[derive(Debug, Clone)]
 pub struct UnwoundNode {
     pub ident: String,
     // description: Option<String>,
-    pub attributes: Vec<Property>, // todo: remove this, they should be wound into properties.
+    // pub attributes: Vec<Property>,
+    pub arguments: HashMap<String, Property>, // todo: zip into properties?
     pub properties: HashMap<String, Property>,
     pub children: Vec<UnwoundNode>,
 }
@@ -89,11 +84,10 @@ impl UnwoundNode {
     }
 }
 
-// todo: rename to overlay
 #[derive(Debug, Clone)]
 pub struct Overlay {
     pub ident: String,
     pub output: String,
-    pub arguments: Vec<String>,
+    pub arguments: Vec<String>, // todo: created TypedArgument model
     pub children: Vec<Node>,
 }
