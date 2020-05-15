@@ -74,13 +74,6 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
 
         unwound_node.children = Vec::new();
 
-        // now we need to traverse the overlay with a preprocessor that
-        // resolves references to $0
-        // unwound_node.children =
-        //     func.children.iter().map(|child| {
-        //         resolve_content_references_in_overlay(attributes, child)
-        //     }).collect();
-
         // replace ident
         unwound_node.ident = func.output.clone();
         // expand overlay arguments into properties NOT NECESSARY
@@ -90,6 +83,15 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
 
         unwound_node.properties = overlay_properties;
         // need to unwind children and merge them
+
+        // now merge in arguments
+        // for argument in 
+        println!("ARGUMENTS: {:?}", attributes);
+        println!("FN PARAMS: {:?}", func.arguments);
+
+        for (index, arg) in func.arguments.iter().enumerate() {
+            println!("{}: {:?} {:?}", &index, &arg, attributes[index]);
+        }
 
         for child in unwind_children(&func.children, unwound_node.properties.clone(), overlays.clone())? {
             let mut newchild = child.clone();

@@ -126,6 +126,8 @@ fn overlay_declaration(i: &str) -> IResult<&str, Node> {
             (multispace0, colon_symbol, space1, symbol, space0, nom::multi::many0(symbol), take_while_newline)
         )(i)?;
 
+    //println!("--{:?}", (&ident, &output, &arguments));
+
     return Ok((input,
         Node::Overlay(
             Overlay {
@@ -136,6 +138,14 @@ fn overlay_declaration(i: &str) -> IResult<&str, Node> {
             }
         )
     ))
+}
+
+#[test]
+fn check_overlay_declaration() {
+    let od = overlay_declaration(":h1 tag content");
+    assert!(od.is_ok());
+    let (r, od) = od.unwrap();
+    assert_eq!(r, "");
 }
 
 /// valid characters for an ident

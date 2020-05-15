@@ -71,6 +71,22 @@ impl UnwoundNode {
     pub fn get_local(&self, ident: &str) -> Option<Property> {
         self.properties.get(ident).map(|p|p.clone())
     }
+
+    pub fn display(&self, indent: usize) -> String {
+        let properties = self.properties.iter().map(|(k,v)| {
+            format!("\n{: >i$}.{} {:?}", "", k, v, i=indent+1)
+        }).collect::<Vec<String>>().join("");
+
+        let children = self.children.iter().map(|c| c.display(indent + 1)).collect::<Vec<String>>().join("\n");
+
+        let ident = if self.ident == "_TEXT".to_string() {
+            format!("{:?}", self.get_local("text").unwrap_or(Property::QuotedString("".to_string())))
+        } else {
+            self.ident.clone()
+        };
+
+        format!("{: >i$}{}{}\n{}", "", ident, properties, children, i=indent)
+    }
 }
 
 // todo: rename to overlay

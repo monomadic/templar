@@ -5,9 +5,10 @@ page "index.html"
     h1 "hello"
     "blah blah lahhdhhd"
 
-:h1 tag
+:h1 tag content
     .background red
     .type "h1"
+
     "blah blah blah"
 "#;
 
@@ -16,5 +17,12 @@ fn main() {
     let post = templar::postprocessor::run(result).unwrap();
 
     println!("{:#?}", post);
-    println!("output: {}", output);
+
+    for node in post {
+        print!("{}", node.display(0));
+    }
+
+    if !output.is_empty() {
+        println!("unparsed remainder: {:#?}", output);
+    }
 }
