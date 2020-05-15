@@ -84,15 +84,9 @@ fn unwind(ident: &String, attributes: &Vec<Property>, properties: &HashMap<Strin
         overlay_properties.extend(properties.clone().into_iter());
 
         unwound_node.properties = overlay_properties;
-        // need to unwind children and merge them
-
-        // now merge in arguments
-        // for argument in 
-        println!("ARGUMENTS: {:?}", attributes);
-        println!("FN PARAMS: {:?}", func.arguments);
 
         for (index, arg) in func.arguments.iter().enumerate() {
-            println!("{}: {:?} {:?}", &index, &arg, attributes[index]);
+            // println!("{}: {:?} {:?}", &index, &arg, attributes[index]);
             unwound_node.arguments.insert(arg.clone(), attributes[index].clone());
         }
 
